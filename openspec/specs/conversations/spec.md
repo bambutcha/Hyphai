@@ -1,0 +1,45 @@
+# conversations Specification
+
+## Purpose
+TBD - created by archiving change add-universal-chat. Update Purpose after archive.
+## Requirements
+### Requirement: Список диалогов
+Система SHALL возвращать все диалоги, отсортированные по updated_at — сначала недавние.
+
+#### Scenario: Пустой список
+- **WHEN** диалогов нет
+- **THEN** API возвращает пустой массив
+
+#### Scenario: Несколько диалогов
+- **WHEN** есть три диалога с разным updated_at
+- **THEN** API возвращает все три, сортировка по updated_at по убыванию
+
+### Requirement: Создание диалога
+Система SHALL создавать новый диалог с опциональным заголовком.
+
+#### Scenario: С заголовком
+- **WHEN** клиент шлёт `{ "title": "Чат про проект" }`
+- **THEN** создаётся диалог с UUID и указанным title
+
+#### Scenario: Без заголовка
+- **WHEN** клиент шлёт `{}` или `{ "title": null }`
+- **THEN** создаётся диалог с title «New conversation»
+
+### Requirement: Получение диалога по id
+Система SHALL возвращать один диалог по валидному UUID.
+
+#### Scenario: Найден
+- **WHEN** запрос с существующим id
+- **THEN** возвращается объект диалога
+
+#### Scenario: Не найден
+- **WHEN** запрос с несуществующим id
+- **THEN** API возвращает HTTP 404
+
+### Requirement: Удаление диалога
+Система SHALL удалять диалог и все его сообщения.
+
+#### Scenario: Успешное удаление
+- **WHEN** клиент удаляет существующий диалог
+- **THEN** диалог и сообщения удалены, API возвращает HTTP 204
+
