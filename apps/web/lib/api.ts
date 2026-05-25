@@ -1,4 +1,5 @@
 import { clearAuthToken, getAuthToken, setAuthToken } from './auth';
+import { localizeErrorMessage } from './errors';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -53,9 +54,12 @@ export function isUnauthorizedError(err: unknown): boolean {
 }
 
 export function getErrorMessage(err: unknown): string {
-  if (isApiError(err)) return err.userMessage;
-  if (err instanceof Error) return err.message;
-  return 'Something went wrong';
+  const raw = isApiError(err)
+    ? err.userMessage
+    : err instanceof Error
+      ? err.message
+      : 'Something went wrong';
+  return localizeErrorMessage(raw);
 }
 
 export function parseApiError(status: number, body: string): ApiError {

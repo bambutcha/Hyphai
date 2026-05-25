@@ -59,7 +59,7 @@ export function MessagePane({
             Create or select a chat to start messaging
           </p>
         )}
-        {conversationTitle && loading && <LoadingState label="Loading messages…" />}
+        {conversationTitle && loading && <LoadingState label="Загрузка сообщений…" />}
         {conversationTitle && !loading && loadError && (
           <div className="mx-auto max-w-3xl py-12 text-center">
             <p className="text-sm text-red-400">{loadError}</p>
@@ -69,7 +69,7 @@ export function MessagePane({
                 onClick={onRetryLoad}
                 className="mt-3 rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
               >
-                Retry
+                Повторить
               </button>
             )}
           </div>

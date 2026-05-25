@@ -7,9 +7,9 @@ interface ConnectionBadgeProps {
 }
 
 const labels: Record<ConnectionStatus, string> = {
-  connecting: 'Connecting…',
-  connected: 'Connected',
-  disconnected: 'Disconnected',
+  connecting: 'Подключение…',
+  connected: 'Подключено',
+  disconnected: 'Отключено',
 };
 
 const dotColors: Record<ConnectionStatus, string> = {

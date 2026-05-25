@@ -5,7 +5,7 @@ interface LoadingStateProps {
   compact?: boolean;
 }
 
-export function LoadingState({ label = 'Loading…', compact = false }: LoadingStateProps) {
+export function LoadingState({ label = 'Загрузка…', compact = false }: LoadingStateProps) {
   return (
     <div
       className={`flex items-center justify-center gap-2 text-sm text-zinc-500 ${

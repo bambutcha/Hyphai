@@ -46,7 +46,7 @@ export function ConversationSidebar({
       <ul className="flex-1 overflow-y-auto px-2 pb-4">
         {loading ? (
           <li>
-            <LoadingState label="Loading chats…" compact />
+            <LoadingState label="Загрузка чатов…" compact />
           </li>
         ) : loadError ? (
           <li className="px-3 py-6 text-center">
@@ -57,7 +57,7 @@ export function ConversationSidebar({
                 onClick={onRetryLoad}
                 className="mt-3 rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
               >
-                Retry
+                Повторить
               </button>
             )}
           </li>
