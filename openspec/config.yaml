@@ -1,0 +1,17 @@
+schema: spec-driven
+
+context: |
+  Hyphai — universal chat (living network of conversations).
+  Stack: Next.js 16, React, TypeScript, Tailwind (apps/web);
+         Hono on Bun (apps/api); PostgreSQL + Kysely.
+  Monorepo with Bun workspaces. Docker Compose for Postgres.
+  Spec-Driven Development via OpenSpec — specs are source of truth.
+  Conventional commits. Dark theme UI with mycelium/hyphae aesthetic.
+
+rules:
+  proposal:
+    - Include Non-goals section
+    - Reference hackathon demo requirements
+  tasks:
+    - Break into verifiable chunks
+    - Order: infra → api → web → integration
