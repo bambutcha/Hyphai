@@ -25,7 +25,7 @@ export function createConversationRoutes(db: Kysely<DB>) {
   routes.post('/', async (c) => {
     const userId = c.get('userId');
     const body = await c.req.json<{ title?: string }>().catch(() => ({}));
-    const title = body.title?.trim() || 'New conversation';
+    const title = body.title?.trim() || 'Новый диалог';
 
     const row = await db
       .insertInto('conversations')
@@ -45,6 +45,28 @@ export function createConversationRoutes(db: Kysely<DB>) {
       .selectAll()
       .where('id', '=', id)
       .where('user_id', '=', userId)
+      .executeTakeFirst();
+
+    if (!row) return c.json({ error: 'Not found' }, 404);
+    return c.json(row);
+  });
+
+  routes.patch('/:id', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+    const body = await c.req.json<{ title?: string }>().catch(() => ({}));
+    const title = body.title?.trim();
+
+    if (!title || title.length > 120) {
+      return c.json({ error: 'Title must be 1-120 characters' }, 400);
+    }
+
+    const row = await db
+      .updateTable('conversations')
+      .set({ title, updated_at: new Date() })
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .returningAll()
       .executeTakeFirst();
 
     if (!row) return c.json({ error: 'Not found' }, 404);

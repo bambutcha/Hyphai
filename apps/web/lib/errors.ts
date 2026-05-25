@@ -6,6 +6,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   'Email and password required': 'Укажите email и пароль',
   'Email and password (min 6 chars) required': 'Укажите email и пароль (мин. 6 символов)',
   'Content is required': 'Введите текст сообщения',
+  'Title must be 1-120 characters': 'Название: от 1 до 120 символов',
   'Not found': 'Не найдено',
   'Cannot reach server. Check your connection.': 'Не удалось связаться с сервером. Проверьте подключение',
   'Server error. Try again in a moment.': 'Ошибка сервера. Попробуйте позже',

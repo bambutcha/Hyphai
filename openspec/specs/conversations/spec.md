@@ -23,7 +23,7 @@ TBD - created by archiving change add-universal-chat. Update Purpose after archi
 
 #### Scenario: Без заголовка
 - **WHEN** клиент шлёт `{}` или `{ "title": null }`
-- **THEN** создаётся диалог с title «New conversation»
+- **THEN** создаётся диалог с title «Новый диалог»
 
 ### Requirement: Получение диалога по id
 Система SHALL возвращать один диалог по валидному UUID.
@@ -42,4 +42,19 @@ TBD - created by archiving change add-universal-chat. Update Purpose after archi
 #### Scenario: Успешное удаление
 - **WHEN** клиент удаляет существующий диалог
 - **THEN** диалог и сообщения удалены, API возвращает HTTP 204
+
+### Requirement: Переименование диалога
+Система SHALL позволять обновить заголовок существующего диалога владельца.
+
+#### Scenario: Успешное переименование
+- **WHEN** клиент шлёт `PATCH /api/conversations/:id` с `{ "title": "Новое имя" }`
+- **THEN** title обновляется, возвращается объект диалога с новым title
+
+#### Scenario: Пустой заголовок
+- **WHEN** title пустой или только пробелы
+- **THEN** API возвращает HTTP 400
+
+#### Scenario: Чужой диалог
+- **WHEN** id существует, но принадлежит другому пользователю
+- **THEN** API возвращает HTTP 404
 

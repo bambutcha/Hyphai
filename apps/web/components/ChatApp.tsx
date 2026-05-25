@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AuthScreen } from '@/components/AuthScreen';
+import { ChatEmptyState } from '@/components/ChatEmptyState';
 import { ConversationSidebar } from '@/components/ConversationSidebar';
 import { MessagePane } from '@/components/MessagePane';
 import { ErrorBanner } from '@/components/ui/ErrorBanner';
@@ -17,7 +18,7 @@ import {
 } from '@/lib/api';
 import { connectConversationWs } from '@/lib/ws';
 
-type BannerAction = 'send' | 'create' | 'delete' | null;
+type BannerAction = 'send' | 'create' | 'delete' | 'rename' | null;
 
 export function ChatApp() {
   const [authed, setAuthed] = useState(false);
@@ -35,6 +36,7 @@ export function ChatApp() {
   const [bannerAction, setBannerAction] = useState<BannerAction>(null);
   const [wsStatus, setWsStatus] = useState<ConnectionStatus | null>(null);
   const deleteTargetRef = useRef<string | null>(null);
+  const renameTargetRef = useRef<{ id: string; title: string } | null>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
 
@@ -161,14 +163,31 @@ export function ChatApp() {
       setBannerAction(null);
       deleteTargetRef.current = id;
       await api.deleteConversation(id);
-      const remaining = await loadConversations();
+      await loadConversations();
       if (activeId === id) {
-        setActiveId(remaining[0]?.id ?? null);
+        setActiveId(null);
+        setMessages([]);
+        setDraft('');
       }
     } catch (err) {
       if (handleUnauthorized(err)) return;
       setBannerError(getErrorMessage(err));
       setBannerAction('delete');
+    }
+  };
+
+  const handleRename = async (id: string, title: string) => {
+    try {
+      setBannerError(null);
+      setBannerAction(null);
+      renameTargetRef.current = { id, title };
+      const updated = await api.updateConversation(id, title);
+      setConversations((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (err) {
+      if (handleUnauthorized(err)) return;
+      setBannerError(getErrorMessage(err));
+      setBannerAction('rename');
+      throw err;
     }
   };
 
@@ -202,6 +221,11 @@ export function ChatApp() {
     }
     if (bannerAction === 'delete' && deleteTargetRef.current) {
       void handleDelete(deleteTargetRef.current);
+      return;
+    }
+    if (bannerAction === 'rename' && renameTargetRef.current) {
+      const { id, title } = renameTargetRef.current;
+      void handleRename(id, title);
     }
   };
 
@@ -217,6 +241,15 @@ export function ChatApp() {
     setWsStatus(null);
   };
 
+  const showWelcome =
+    !loadingConversations && !conversationsError && conversations.length === 0;
+  const showPick =
+    !loadingConversations &&
+    !conversationsError &&
+    conversations.length > 0 &&
+    !activeId;
+  const showChat = !!activeId && !!activeConversation;
+
   return (
     <div className="flex h-dvh flex-col md:flex-row">
       <ConversationSidebar
@@ -228,6 +261,7 @@ export function ChatApp() {
         onSelect={setActiveId}
         onCreate={handleCreate}
         onDelete={handleDelete}
+        onRename={handleRename}
         onLogout={handleLogout}
       />
       <div className="flex min-h-0 flex-1 flex-col">
@@ -241,20 +275,22 @@ export function ChatApp() {
             onRetry={bannerAction ? handleBannerRetry : undefined}
           />
         )}
-        <MessagePane
-          messages={messages}
-          conversationTitle={activeConversation?.title ?? null}
-          draft={draft}
-          loading={loadingMessages}
-          loadError={messagesError}
-          onRetryLoad={
-            activeId ? () => loadMessages(activeId).catch(() => undefined) : undefined
-          }
-          connectionStatus={wsStatus}
-          onDraftChange={setDraft}
-          onSend={handleSend}
-          sending={sending}
-        />
+        {showWelcome && <ChatEmptyState variant="welcome" onCreateChat={handleCreate} />}
+        {showPick && <ChatEmptyState variant="pick" onCreateChat={handleCreate} />}
+        {showChat && (
+          <MessagePane
+            messages={messages}
+            conversationTitle={activeConversation.title}
+            draft={draft}
+            loading={loadingMessages}
+            loadError={messagesError}
+            onRetryLoad={() => loadMessages(activeId).catch(() => undefined)}
+            connectionStatus={wsStatus}
+            onDraftChange={setDraft}
+            onSend={handleSend}
+            sending={sending}
+          />
+        )}
       </div>
     </div>
   );
