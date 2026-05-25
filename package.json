@@ -1,12 +1,14 @@
 {
   "name": "hyphai",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/*"],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "bun run dev:api & bun run dev:web",
+    "dev:api": "bun run --filter @hyphai/api dev",
+    "dev:web": "bun run --filter @hyphai/web dev",
+    "db:migrate": "bun run --filter @hyphai/api db:migrate"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "Daniel Yagolnik",
+  "license": "MIT"
 }
