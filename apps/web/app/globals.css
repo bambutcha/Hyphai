@@ -1,95 +1,118 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
+  --hyphai-bg-deep: #050506;
+  --hyphai-surface-1: rgba(24, 24, 27, 0.72);
+  --hyphai-surface-2: rgba(39, 39, 42, 0.55);
+  --hyphai-glow: rgba(52, 211, 153, 0.35);
+  --hyphai-accent: #34d399;
+  --hyphai-accent-dim: #059669;
+  --hyphai-border: rgba(52, 211, 153, 0.14);
+  --hyphai-border-strong: rgba(52, 211, 153, 0.28);
+  --background: var(--hyphai-bg-deep);
   --foreground: #fafafa;
-  --accent: #10b981;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-syne);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
+  background: var(--hyphai-bg-deep);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
-@keyframes hyphae-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
+.font-display {
+  font-family: var(--font-syne), var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.hyphai-grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.glass-panel {
+  background: var(--hyphai-surface-1);
+  border: 1px solid var(--hyphai-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.chat-main-area {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -15%, rgb(16 185 129 / 0.14), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 95% 90%, rgb(5 150 105 / 0.08), transparent 50%),
+    linear-gradient(180deg, #0c0c0e 0%, #09090b 100%);
+}
+
+.scroll-fade-y {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 24px,
+    black calc(100% - 24px),
+    transparent 100%
+  );
+}
+
+.composer-glow:focus-within {
+  box-shadow:
+    0 0 0 1px var(--hyphai-border-strong),
+    0 0 32px rgb(52 211 153 / 0.15),
+    0 8px 32px rgb(0 0 0 / 0.35);
+}
+
+@keyframes hyphae-dash {
   to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    stroke-dashoffset: 0;
   }
 }
 
-@keyframes hyphae-slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes hyphae-message-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes hyphae-pulse-soft {
+@keyframes hyphae-float {
   0%,
   100% {
-    opacity: 0.4;
+    transform: translateY(0);
   }
   50% {
-    opacity: 0.7;
+    transform: translateY(-6px);
   }
 }
 
-.animate-hyphae-fade-in {
-  animation: hyphae-fade-in 0.45s ease-out both;
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
-.animate-hyphae-slide-in {
-  animation: hyphae-slide-in 0.35s ease-out both;
+.animate-hyphae-float {
+  animation: hyphae-float 5s ease-in-out infinite;
 }
 
-.animate-hyphae-message-in {
-  animation: hyphae-message-in 0.3s ease-out both;
-}
-
-.animate-hyphae-pulse-soft {
-  animation: hyphae-pulse-soft 4s ease-in-out infinite;
-}
-
-.chat-area-bg {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgb(16 185 129 / 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgb(16 185 129 / 0.06), transparent),
-    #18181b;
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-hyphae-fade-in,
-  .animate-hyphae-slide-in,
-  .animate-hyphae-message-in,
-  .animate-hyphae-pulse-soft {
+  .animate-hyphae-float,
+  .animate-glow-pulse {
     animation: none;
+  }
+
+  .hyphae-network line {
+    animation: none !important;
   }
 }

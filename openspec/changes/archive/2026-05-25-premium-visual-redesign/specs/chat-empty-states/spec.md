@@ -1,8 +1,5 @@
-# chat-empty-states Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change polish-chat-ui. Update Purpose after archive.
-## Requirements
 ### Requirement: Welcome при отсутствии диалогов
 UI SHALL показывать premium welcome-экран с **custom SVG-иллюстрацией** hyphae (не emoji) и motion-анимацией появления.
 
@@ -23,4 +20,3 @@ UI SHALL анимировать empty states через `motion` (fade + scale s
 #### Scenario: Появление welcome
 - **WHEN** отображается welcome
 - **THEN** контент и иллюстрация появляются с spring/stagger
-

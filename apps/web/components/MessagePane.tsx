@@ -1,9 +1,12 @@
 'use client';
 
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import type { Message } from '@/lib/api';
 import { ConnectionBadge, type ConnectionStatus } from '@/components/ui/ConnectionBadge';
 import { LoadingState } from '@/components/ui/LoadingState';
+import { GlowButton } from '@/components/visual/GlowButton';
+import { messageBubble, motionTransition } from '@/lib/motion';
 import { uiText } from '@/lib/ui-text';
 
 interface MessagePaneProps {
@@ -31,11 +34,12 @@ export function MessagePane({
   onSend,
   sending,
 }: MessagePaneProps) {
+  const reduced = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+  }, [messages, reduced]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,13 +48,15 @@ export function MessagePane({
   };
 
   return (
-    <section className="chat-area-bg flex h-full min-h-0 flex-1 flex-col">
-      <header className="flex items-center justify-between gap-3 border-b border-emerald-900/30 bg-zinc-900/50 px-6 py-4 backdrop-blur-sm">
-        <h2 className="truncate text-lg font-medium text-zinc-100">{conversationTitle}</h2>
+    <section className="chat-main-area relative flex h-full min-h-0 flex-1 flex-col">
+      <header className="glass-panel z-10 mx-4 mt-4 flex items-center justify-between gap-3 rounded-xl border-0 px-6 py-4 md:mx-6">
+        <h2 className="font-display truncate text-lg font-semibold text-zinc-100">
+          {conversationTitle}
+        </h2>
         {connectionStatus && <ConnectionBadge status={connectionStatus} />}
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
+      <div className="scroll-fade-y flex-1 overflow-y-auto px-4 py-6 md:px-8">
         {loading && <LoadingState label={uiText.messages.loadingMessages} />}
         {!loading && loadError && (
           <div className="mx-auto max-w-3xl py-12 text-center">
@@ -59,7 +65,7 @@ export function MessagePane({
               <button
                 type="button"
                 onClick={onRetryLoad}
-                className="mt-3 rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-200 transition hover:bg-zinc-700"
+                className="mt-3 rounded-lg bg-zinc-800/80 px-4 py-2 text-sm text-zinc-200 transition hover:bg-zinc-700"
               >
                 {uiText.messages.retry}
               </button>
@@ -68,49 +74,81 @@ export function MessagePane({
         )}
         {!loading && !loadError && (
           <div className="mx-auto flex max-w-3xl flex-col gap-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`animate-hyphae-message-in flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-md ${
-                    message.role === 'user'
-                      ? 'bg-emerald-600 text-white shadow-emerald-900/30'
-                      : 'bg-zinc-800/90 text-zinc-100 ring-1 ring-zinc-700/80'
+            <AnimatePresence initial={false}>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  layout={!reduced}
+                  variants={messageBubble}
+                  initial="hidden"
+                  animate="visible"
+                  transition={motionTransition(!!reduced)}
+                  className={`flex ${
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  {message.content}
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                      message.role === 'user'
+                        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-emerald-950 shadow-[0_4px_24px_rgba(52,211,153,0.25)]'
+                        : 'glass-panel text-zinc-100 shadow-lg shadow-black/20'
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {sending && (
+              <motion.div
+                initial={reduced ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-start"
+                aria-live="polite"
+              >
+                <div className="glass-panel flex items-center gap-2 rounded-2xl px-4 py-3">
+                  <span className="flex gap-1" aria-hidden>
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-glow-pulse"
+                        style={{ animationDelay: `${i * 0.2}s` }}
+                      />
+                    ))}
+                  </span>
+                  <span className="text-xs text-zinc-500">Отправка…</span>
                 </div>
-              </div>
-            ))}
+              </motion.div>
+            )}
             <div ref={bottomRef} />
           </div>
         )}
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="border-t border-emerald-900/30 bg-zinc-900/60 p-4 backdrop-blur-sm md:p-6"
-      >
-        <div className="mx-auto flex max-w-3xl gap-3">
+      <form onSubmit={handleSubmit} className="relative z-10 px-4 pb-6 pt-2 md:px-8 md:pb-8">
+        <div className="composer-glow glass-panel mx-auto flex max-w-3xl gap-3 rounded-2xl p-2 transition-shadow">
           <input
             type="text"
             value={draft}
             onChange={(e) => onDraftChange(e.target.value)}
             placeholder={uiText.messages.placeholder}
             disabled={sending}
-            className="flex-1 rounded-xl border border-zinc-700 bg-zinc-950/80 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 transition focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 disabled:opacity-50"
+            className="flex-1 bg-transparent px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none disabled:opacity-50"
           />
-          <button
+          <GlowButton
             type="submit"
             disabled={!draft.trim() || sending}
-            className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-medium text-white shadow-md shadow-emerald-900/25 transition hover:scale-[1.02] hover:bg-emerald-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+            className="shrink-0 px-5"
           >
-            {sending ? '…' : uiText.messages.send}
-          </button>
+            {sending ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-950/30 border-t-emerald-950" />
+                …
+              </span>
+            ) : (
+              uiText.messages.send
+            )}
+          </GlowButton>
         </div>
       </form>
     </section>

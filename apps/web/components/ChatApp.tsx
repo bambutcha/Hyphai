@@ -1,5 +1,6 @@
 'use client';
 
+import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AuthScreen } from '@/components/AuthScreen';
 import { ChatEmptyState } from '@/components/ChatEmptyState';
@@ -7,6 +8,8 @@ import { ConversationSidebar } from '@/components/ConversationSidebar';
 import { MessagePane } from '@/components/MessagePane';
 import { ErrorBanner } from '@/components/ui/ErrorBanner';
 import type { ConnectionStatus } from '@/components/ui/ConnectionBadge';
+import { HyphaeBackground } from '@/components/visual/HyphaeBackground';
+import { pageTransition } from '@/lib/motion';
 import {
   api,
   clearAuthToken,
@@ -250,8 +253,17 @@ export function ChatApp() {
     !activeId;
   const showChat = !!activeId && !!activeConversation;
 
+  const mainView = showWelcome
+    ? 'welcome'
+    : showPick
+      ? 'pick'
+      : showChat
+        ? 'chat'
+        : null;
+
   return (
-    <div className="flex h-dvh flex-col md:flex-row">
+    <div className="relative flex h-dvh flex-col overflow-hidden md:flex-row">
+      <HyphaeBackground />
       <ConversationSidebar
         conversations={conversations}
         activeId={activeId}
@@ -264,7 +276,7 @@ export function ChatApp() {
         onRename={handleRename}
         onLogout={handleLogout}
       />
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         {bannerError && (
           <ErrorBanner
             message={bannerError}
@@ -275,22 +287,55 @@ export function ChatApp() {
             onRetry={bannerAction ? handleBannerRetry : undefined}
           />
         )}
-        {showWelcome && <ChatEmptyState variant="welcome" onCreateChat={handleCreate} />}
-        {showPick && <ChatEmptyState variant="pick" onCreateChat={handleCreate} />}
-        {showChat && (
-          <MessagePane
-            messages={messages}
-            conversationTitle={activeConversation.title}
-            draft={draft}
-            loading={loadingMessages}
-            loadError={messagesError}
-            onRetryLoad={() => loadMessages(activeId).catch(() => undefined)}
-            connectionStatus={wsStatus}
-            onDraftChange={setDraft}
-            onSend={handleSend}
-            sending={sending}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {mainView === 'welcome' && (
+            <motion.div
+              key="welcome"
+              className="flex min-h-0 flex-1 flex-col"
+              variants={pageTransition}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <ChatEmptyState variant="welcome" onCreateChat={handleCreate} />
+            </motion.div>
+          )}
+          {mainView === 'pick' && (
+            <motion.div
+              key="pick"
+              className="flex min-h-0 flex-1 flex-col"
+              variants={pageTransition}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <ChatEmptyState variant="pick" onCreateChat={handleCreate} />
+            </motion.div>
+          )}
+          {mainView === 'chat' && activeConversation && (
+            <motion.div
+              key={`chat-${activeId}`}
+              className="flex min-h-0 flex-1 flex-col"
+              variants={pageTransition}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <MessagePane
+                messages={messages}
+                conversationTitle={activeConversation.title}
+                draft={draft}
+                loading={loadingMessages}
+                loadError={messagesError}
+                onRetryLoad={() => loadMessages(activeId!).catch(() => undefined)}
+                connectionStatus={wsStatus}
+                onDraftChange={setDraft}
+                onSend={handleSend}
+                sending={sending}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

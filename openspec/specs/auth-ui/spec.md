@@ -27,11 +27,11 @@ UI SHALL валидировать поля входа и регистрации 
 - **THEN** под полем имени отображается «Введите имя»
 
 ### Requirement: Стиль полей с ошибкой
-UI SHALL подсвечивать поле с ошибкой красной рамкой и текстом ошибки в стиле Hyphai (тёмная тема, `text-red-400`).
+UI SHALL соответствовать premium visual system: glass form card, hyphae background, motion при входе на экран.
 
 #### Scenario: Визуальная индикация
 - **WHEN** поле не прошло валидацию
-- **THEN** рамка input красная, под полем текст ошибки на русском
+- **THEN** рамка и текст ошибки с glow-red акцентом в стиле Hyphai
 
 ### Requirement: Русские ошибки авторизации с API
 UI SHALL показывать ошибки login/register на русском языке, включая ответы API.
@@ -43,4 +43,11 @@ UI SHALL показывать ошибки login/register на русском я
 #### Scenario: Email уже занят
 - **WHEN** API возвращает `Email already registered`
 - **THEN** пользователь видит «Этот email уже зарегистрирован»
+
+### Requirement: Premium auth layout
+UI SHALL показывать экран входа в едином стиле с чатом: фон hyphae, glass card, display-типографика.
+
+#### Scenario: Вход на auth
+- **WHEN** пользователь не авторизован
+- **THEN** видит полноэкранный branded layout с анимацией появления формы
 

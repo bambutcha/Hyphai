@@ -1,8 +1,11 @@
 'use client';
 
+import { motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import type { Conversation } from '@/lib/api';
 import { LoadingState } from '@/components/ui/LoadingState';
+import { GlowButton } from '@/components/visual/GlowButton';
+import { motionTransition, staggerContainer, staggerItem } from '@/lib/motion';
 import { uiText } from '@/lib/ui-text';
 
 interface ConversationSidebarProps {
@@ -30,6 +33,7 @@ export function ConversationSidebar({
   onRename,
   onLogout,
 }: ConversationSidebarProps) {
+  const reduced = useReducedMotion();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [savingRename, setSavingRename] = useState(false);
@@ -72,23 +76,24 @@ export function ConversationSidebar({
   };
 
   return (
-    <aside className="flex h-full w-full flex-col border-r border-emerald-900/40 bg-zinc-950 md:w-72 lg:w-80">
-      <div className="border-b border-emerald-900/40 px-4 py-5">
-        <h1 className="text-xl font-semibold tracking-tight text-emerald-400">Hyphai</h1>
+    <aside className="glass-panel relative z-20 flex h-full w-full flex-col border-r border-[var(--hyphai-border)] md:w-72 lg:w-80">
+      <div className="border-b border-[var(--hyphai-border)] px-4 py-5">
+        <h1 className="font-display text-xl font-bold tracking-tight text-emerald-400">Hyphai</h1>
         <p className="mt-1 text-xs text-zinc-500">{uiText.sidebar.tagline}</p>
       </div>
 
       <div className="p-3">
-        <button
-          type="button"
-          onClick={onCreate}
-          className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-emerald-900/20 transition hover:scale-[1.01] hover:bg-emerald-500 active:scale-[0.99]"
-        >
+        <GlowButton onClick={onCreate} className="w-full">
           + {uiText.sidebar.newChat}
-        </button>
+        </GlowButton>
       </div>
 
-      <ul className="flex-1 overflow-y-auto px-2 pb-4">
+      <motion.ul
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="flex-1 overflow-y-auto px-2 pb-4"
+      >
         {loading ? (
           <li>
             <LoadingState label={uiText.sidebar.loadingChats} compact />
@@ -100,7 +105,7 @@ export function ConversationSidebar({
               <button
                 type="button"
                 onClick={onRetryLoad}
-                className="mt-3 rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-200 transition hover:bg-zinc-700"
+                className="mt-3 rounded-lg bg-zinc-800/80 px-4 py-2 text-sm text-zinc-200 transition hover:bg-zinc-700"
               >
                 {uiText.sidebar.retry}
               </button>
@@ -109,19 +114,25 @@ export function ConversationSidebar({
         ) : conversations.length === 0 ? (
           <li className="px-3 py-6 text-center text-sm text-zinc-500">{uiText.sidebar.empty}</li>
         ) : (
-          conversations.map((conversation, index) => (
-            <li
+          conversations.map((conversation) => (
+            <motion.li
               key={conversation.id}
-              className="animate-hyphae-slide-in mb-1.5"
-              style={{ animationDelay: `${Math.min(index * 40, 200)}ms` }}
+              variants={staggerItem}
+              transition={motionTransition(!!reduced)}
+              className="relative mb-1"
             >
               <div
-                className={`group flex items-center gap-1 rounded-xl transition ${
-                  activeId === conversation.id
-                    ? 'bg-emerald-950/80 ring-1 ring-emerald-700/50'
-                    : 'hover:bg-zinc-900/80'
+                className={`group relative flex items-center gap-1 rounded-xl transition ${
+                  activeId === conversation.id ? '' : 'hover:bg-zinc-900/50'
                 }`}
               >
+                {activeId === conversation.id && (
+                  <motion.div
+                    layoutId="sidebar-active"
+                    className="absolute inset-0 rounded-xl bg-emerald-950/70 ring-1 ring-emerald-600/40"
+                    transition={reduced ? { duration: 0.01 } : { type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
                 {editingId === conversation.id ? (
                   <input
                     ref={inputRef}
@@ -140,7 +151,7 @@ export function ConversationSidebar({
                         cancelRename();
                       }
                     }}
-                    className="flex-1 rounded-lg border border-emerald-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                    className="relative z-10 flex-1 rounded-lg border border-emerald-700/60 bg-zinc-950/90 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
@@ -151,7 +162,7 @@ export function ConversationSidebar({
                       e.preventDefault();
                       startRename(conversation);
                     }}
-                    className="flex-1 truncate px-3 py-2.5 text-left text-sm text-zinc-300 transition"
+                    className="relative z-10 flex-1 truncate px-3 py-2.5 text-left text-sm text-zinc-300 transition"
                     title="Двойной клик — переименовать"
                   >
                     {conversation.title}
@@ -162,7 +173,7 @@ export function ConversationSidebar({
                     <button
                       type="button"
                       onClick={() => startRename(conversation)}
-                      className="rounded px-1.5 py-1 text-xs text-zinc-600 opacity-0 transition hover:text-emerald-400 group-hover:opacity-100"
+                      className="relative z-10 rounded px-1.5 py-1 text-xs text-zinc-600 opacity-0 transition hover:text-emerald-400 group-hover:opacity-100"
                       aria-label={uiText.sidebar.renameAria}
                     >
                       ✎
@@ -170,7 +181,7 @@ export function ConversationSidebar({
                     <button
                       type="button"
                       onClick={() => onDelete(conversation.id)}
-                      className="rounded px-1.5 py-1 text-xs text-zinc-600 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
+                      className="relative z-10 rounded px-1.5 py-1 text-xs text-zinc-600 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
                       aria-label={uiText.sidebar.deleteAria}
                     >
                       ×
@@ -178,16 +189,16 @@ export function ConversationSidebar({
                   </>
                 )}
               </div>
-            </li>
+            </motion.li>
           ))
         )}
-      </ul>
+      </motion.ul>
       {onLogout && (
-        <div className="border-t border-emerald-900/40 p-3">
+        <div className="border-t border-[var(--hyphai-border)] p-3">
           <button
             type="button"
             onClick={onLogout}
-            className="w-full rounded-lg px-4 py-2 text-sm text-zinc-500 transition hover:bg-zinc-900 hover:text-zinc-300"
+            className="w-full rounded-lg px-4 py-2 text-sm text-zinc-500 transition hover:bg-zinc-900/60 hover:text-zinc-300"
           >
             {uiText.sidebar.logout}
           </button>

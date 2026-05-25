@@ -122,19 +122,31 @@ UI SHALL отображать все пользовательские строк
 - **THEN** title страницы и aria-label для удаления диалога — на русском
 
 ### Requirement: Анимации интерфейса
-UI SHALL использовать плавные CSS-анимации для сообщений, списка диалогов, кнопок и переходов между состояниями.
+UI SHALL использовать мощные, но сдержанные анимации на базе `motion`: layout transitions, spring, stagger, AnimatePresence — для сообщений, переключения чатов и empty states.
+
+#### Scenario: Переход empty → chat
+- **WHEN** пользователь выбирает или создаёт диалог
+- **THEN** empty state плавно сменяется панелью чата (cross-fade + slide)
+
+#### Scenario: Active chat indicator
+- **WHEN** пользователь выбирает другой диалог
+- **THEN** индикатор активного элемента плавно перемещается (`layoutId`)
 
 #### Scenario: Появление сообщения
-- **WHEN** в историю добавляется новое сообщение
-- **THEN** bubble появляется с анимацией fade/slide-in
+- **WHEN** новое сообщение добавляется в ленту
+- **THEN** bubble появляется со spring-анимацией
 
-#### Scenario: Stagger списка диалогов
+#### Scenario: Stagger диалогов
 - **WHEN** список диалогов загружается
-- **THEN** элементы появляются с лёгким последовательным stagger
+- **THEN** элементы появляются каскадом (stagger)
+
+#### Scenario: Отправка сообщения
+- **WHEN** пользователь нажимает «Отправить»
+- **THEN** кнопка даёт tactile feedback (scale/spring), опционально краткий glow-pulse
 
 #### Scenario: Reduced motion
-- **WHEN** у пользователя включён `prefers-reduced-motion: reduce`
-- **THEN** анимации отключены или минимизированы
+- **WHEN** `prefers-reduced-motion: reduce`
+- **THEN** анимации отключены или сведены к opacity-only без движения
 
 ### Requirement: Переименование диалога в UI
 UI SHALL позволять переименовать диалог из сайдбара без отдельной страницы настроек.
