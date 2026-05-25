@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "bun --env-file=../../.env run --watch src/index.ts",
     "start": "bun run src/index.ts",
-    "db:migrate": "bun --env-file=../../.env run src/db/migrate.ts"
+    "db:migrate": "bun run src/db/migrate.ts"
   },
   "dependencies": {
     "hono": "^4.7.10",
+    "ioredis": "^5.6.1",
+    "jose": "^6.0.11",
     "kysely": "^0.27.6",
     "pg": "^8.16.0"
   },

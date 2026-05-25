@@ -8,6 +8,7 @@ interface ConversationSidebarProps {
   onSelect: (id: string) => void;
   onCreate: () => void;
   onDelete: (id: string) => void;
+  onLogout?: () => void;
 }
 
 export function ConversationSidebar({
@@ -16,6 +17,7 @@ export function ConversationSidebar({
   onSelect,
   onCreate,
   onDelete,
+  onLogout,
 }: ConversationSidebarProps) {
   return (
     <aside className="flex h-full w-full flex-col border-r border-emerald-900/40 bg-zinc-950 md:w-72 lg:w-80">
@@ -71,6 +73,17 @@ export function ConversationSidebar({
           ))
         )}
       </ul>
+      {onLogout && (
+        <div className="border-t border-emerald-900/40 p-3">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="w-full rounded-lg px-4 py-2 text-sm text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
+          >
+            Выйти
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

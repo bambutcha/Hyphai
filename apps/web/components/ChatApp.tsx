@@ -1,11 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { AuthScreen } from '@/components/AuthScreen';
 import { ConversationSidebar } from '@/components/ConversationSidebar';
 import { MessagePane } from '@/components/MessagePane';
-import { api, type Conversation, type Message } from '@/lib/api';
+import { api, clearAuthToken, getAuthToken, type Conversation, type Message } from '@/lib/api';
+import { connectConversationWs } from '@/lib/ws';
 
 export function ChatApp() {
+  const [authed, setAuthed] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -14,6 +17,10 @@ export function ChatApp() {
   const [error, setError] = useState<string | null>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
+
+  useEffect(() => {
+    setAuthed(!!getAuthToken());
+  }, []);
 
   const loadConversations = useCallback(async () => {
     const data = await api.listConversations();
@@ -27,16 +34,36 @@ export function ChatApp() {
   }, []);
 
   useEffect(() => {
+    if (!authed) return;
     loadConversations().catch((e: Error) => setError(e.message));
-  }, [loadConversations]);
+  }, [authed, loadConversations]);
 
   useEffect(() => {
-    if (!activeId) {
+    if (!activeId || !authed) {
       setMessages([]);
       return;
     }
     loadMessages(activeId).catch((e: Error) => setError(e.message));
-  }, [activeId, loadMessages]);
+  }, [activeId, authed, loadMessages]);
+
+  useEffect(() => {
+    if (!activeId || !authed) return;
+
+    return connectConversationWs(activeId, (event) => {
+      if (event.type === 'messages.created' && event.conversationId === activeId) {
+        setMessages((prev) => {
+          const ids = new Set(prev.map((m) => m.id));
+          const added = event.messages.filter((m) => !ids.has(m.id));
+          return [...prev, ...added];
+        });
+        loadConversations();
+      }
+    });
+  }, [activeId, authed, loadConversations]);
+
+  if (!authed) {
+    return <AuthScreen onAuthenticated={() => setAuthed(true)} />;
+  }
 
   const handleCreate = async () => {
     try {
@@ -80,6 +107,14 @@ export function ChatApp() {
     }
   };
 
+  const handleLogout = () => {
+    clearAuthToken();
+    setAuthed(false);
+    setActiveId(null);
+    setConversations([]);
+    setMessages([]);
+  };
+
   return (
     <div className="flex h-dvh flex-col md:flex-row">
       <ConversationSidebar
@@ -88,6 +123,7 @@ export function ChatApp() {
         onSelect={setActiveId}
         onCreate={handleCreate}
         onDelete={handleDelete}
+        onLogout={handleLogout}
       />
       <div className="flex min-h-0 flex-1 flex-col">
         {error && (
