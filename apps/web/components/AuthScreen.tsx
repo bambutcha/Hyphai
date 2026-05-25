@@ -158,7 +158,7 @@ export function AuthScreen({ initialError = null, onAuthenticated }: AuthScreenP
           <button
             type="button"
             onClick={handleModeSwitch}
-            className="mt-4 w-full text-sm text-zinc-500 transition hover:text-emerald-400"
+            className="hyphai-interactive hyphai-focus mt-4 w-full rounded-lg py-2.5 text-sm text-zinc-500 hover:bg-zinc-900/40 hover:text-emerald-400"
           >
             {mode === 'login' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
           </button>

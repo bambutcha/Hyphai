@@ -21,7 +21,7 @@ export function FormField({ label, error, className = '', id, ...inputProps }: F
         id={inputId}
         aria-invalid={error ? true : undefined}
         aria-describedby={error && inputId ? `${inputId}-error` : undefined}
-        className={`w-full rounded-lg border bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 ${
+        className={`hyphai-focus w-full rounded-lg border bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:ring-1 ${
           error
             ? 'border-red-700 focus:border-red-600 focus:ring-red-600'
             : 'border-zinc-700 focus:border-emerald-600 focus:ring-emerald-600'

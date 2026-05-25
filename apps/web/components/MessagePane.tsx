@@ -65,7 +65,7 @@ export function MessagePane({
               <button
                 type="button"
                 onClick={onRetryLoad}
-                className="mt-3 rounded-lg bg-zinc-800/80 px-4 py-2 text-sm text-zinc-200 transition hover:bg-zinc-700"
+                className="hyphai-interactive hyphai-focus mt-3 rounded-lg bg-zinc-800/80 px-4 py-2.5 text-sm text-zinc-200 hover:bg-zinc-700"
               >
                 {uiText.messages.retry}
               </button>
@@ -133,7 +133,7 @@ export function MessagePane({
             onChange={(e) => onDraftChange(e.target.value)}
             placeholder={uiText.messages.placeholder}
             disabled={sending}
-            className="flex-1 bg-transparent px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none disabled:opacity-50"
+            className="hyphai-focus flex-1 bg-transparent px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
           />
           <GlowButton
             type="submit"

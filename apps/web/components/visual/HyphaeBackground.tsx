@@ -1,29 +1,107 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
+
+const LERP = 0.18;
 
 export function HyphaeBackground() {
-  const [mouse, setMouse] = useState({ x: 50, y: 50 });
+  const glowRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef({ x: 0, y: 0 });
+  const currentRef = useRef({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
+  const reducedRef = useRef(false);
+  const trackingRef = useRef(false);
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      setMouse({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
+    const applyTransform = (x: number, y: number) => {
+      const el = glowRef.current;
+      if (!el) return;
+      el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
     };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
+
+    const centerPointer = () => {
+      const x = window.innerWidth / 2;
+      const y = window.innerHeight / 2;
+      targetRef.current = { x, y };
+      currentRef.current = { x, y };
+      applyTransform(x, y);
+    };
+
+    const tick = () => {
+      const cur = currentRef.current;
+      const tgt = targetRef.current;
+      const nx = cur.x + (tgt.x - cur.x) * LERP;
+      const ny = cur.y + (tgt.y - cur.y) * LERP;
+      currentRef.current = { x: nx, y: ny };
+      applyTransform(nx, ny);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const startLoop = () => {
+      if (rafRef.current != null) return;
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const stopLoop = () => {
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+
+    const onMove = (e: MouseEvent) => {
+      targetRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const enableTracking = () => {
+      if (trackingRef.current) return;
+      trackingRef.current = true;
+      window.addEventListener('mousemove', onMove, { passive: true });
+      startLoop();
+    };
+
+    const disableTracking = () => {
+      if (!trackingRef.current) return;
+      trackingRef.current = false;
+      window.removeEventListener('mousemove', onMove);
+      stopLoop();
+      centerPointer();
+    };
+
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncMotionPreference = () => {
+      reducedRef.current = mq.matches;
+      if (mq.matches) disableTracking();
+      else enableTracking();
+    };
+
+    const onVisibility = () => {
+      if (document.hidden || reducedRef.current) {
+        stopLoop();
+        return;
+      }
+      if (trackingRef.current) startLoop();
+    };
+
+    centerPointer();
+    syncMotionPreference();
+    mq.addEventListener('change', syncMotionPreference);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      disableTracking();
+      mq.removeEventListener('change', syncMotionPreference);
+      document.removeEventListener('visibilitychange', onVisibility);
+      stopLoop();
+    };
   }, []);
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       <div
-        className="absolute h-[480px] w-[480px] rounded-full opacity-40 blur-[100px] transition-[left,top] duration-700 ease-out"
+        ref={glowRef}
+        className="absolute left-0 top-0 h-[480px] w-[480px] rounded-full opacity-40 blur-[100px] will-change-transform"
         style={{
-          left: `${mouse.x}%`,
-          top: `${mouse.y}%`,
-          transform: 'translate(-50%, -50%)',
           background: 'radial-gradient(circle, rgba(52,211,153,0.18) 0%, transparent 70%)',
         }}
       />

@@ -14,7 +14,7 @@ export function ErrorBanner({ message, onDismiss, onRetry }: ErrorBannerProps) {
         <button
           type="button"
           onClick={onRetry}
-          className="shrink-0 rounded-md bg-red-900/60 px-2.5 py-1 text-xs font-medium text-red-100 hover:bg-red-900"
+          className="hyphai-interactive hyphai-focus shrink-0 rounded-md bg-red-900/60 px-2.5 py-2 text-xs font-medium text-red-100 hover:bg-red-900"
         >
           Повторить
         </button>
@@ -22,8 +22,9 @@ export function ErrorBanner({ message, onDismiss, onRetry }: ErrorBannerProps) {
       <button
         type="button"
         onClick={onDismiss}
-        className="shrink-0 rounded-md px-2 py-1 text-xs text-red-300 hover:bg-red-900/40 hover:text-red-100"
+        className="hyphai-interactive hyphai-focus shrink-0 rounded-md px-2.5 py-2 text-xs text-red-300 hover:bg-red-900/40 hover:text-red-100"
         aria-label="Закрыть"
+        title="Закрыть"
       >
         ✕
       </button>

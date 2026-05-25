@@ -63,6 +63,18 @@ Postgres в dev-compose на порту **5433** (если только postgres
 | **RabbitMQ** | ❌ | Нужен для async jobs (email, LLM queue) — overkill для MVP |
 | **Kafka** | ❌ | Event streaming at scale — overkill для хакатона |
 
+## UI roadmap (SaaS polish backlog)
+
+Следующие улучшения вне текущего MVP — отдельные OpenSpec changes:
+
+| Область | Цель |
+|---|---|
+| Toasts | success/error feedback без только ErrorBanner |
+| Mobile drawer | off-canvas сайдбар на `<768px` |
+| Skeleton loaders | shimmer вместо только текстового LoadingState |
+| Command palette | ⌘K быстрые действия |
+| Settings | профиль, тема |
+
 ## License
 
 MIT

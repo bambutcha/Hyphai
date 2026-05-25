@@ -25,8 +25,8 @@ export function GlowButton({
 
   const base =
     variant === 'primary'
-      ? 'rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-6 py-3 text-sm font-semibold text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.35)]'
-      : 'rounded-xl px-4 py-2 text-sm text-zinc-400 hover:text-emerald-300';
+      ? 'hyphai-interactive hyphai-focus hyphai-touch-cta cursor-pointer rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-600 px-6 py-3 text-sm font-semibold text-emerald-950 shadow-[0_0_28px_rgba(52,211,153,0.35)]'
+      : 'hyphai-interactive hyphai-focus cursor-pointer rounded-xl px-4 py-2 text-sm text-zinc-400 hover:text-emerald-300';
 
   return (
     <motion.button

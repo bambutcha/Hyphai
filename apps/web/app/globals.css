@@ -72,6 +72,39 @@ body {
     0 8px 32px rgb(0 0 0 / 0.35);
 }
 
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+.hyphai-interactive {
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.hyphai-interactive:disabled,
+.hyphai-interactive[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.hyphai-focus {
+  outline: none;
+}
+
+.hyphai-focus:focus-visible {
+  outline: 2px solid rgb(52 211 153 / 0.65);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .hyphai-touch-cta {
+    min-height: 44px;
+  }
+}
+
 @keyframes hyphae-dash {
   to {
     stroke-dashoffset: 0;

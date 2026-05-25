@@ -105,7 +105,7 @@ export function ConversationSidebar({
               <button
                 type="button"
                 onClick={onRetryLoad}
-                className="mt-3 rounded-lg bg-zinc-800/80 px-4 py-2 text-sm text-zinc-200 transition hover:bg-zinc-700"
+                className="hyphai-interactive hyphai-focus mt-3 rounded-lg bg-zinc-800/80 px-4 py-2.5 text-sm text-zinc-200 hover:bg-zinc-700"
               >
                 {uiText.sidebar.retry}
               </button>
@@ -151,7 +151,7 @@ export function ConversationSidebar({
                         cancelRename();
                       }
                     }}
-                    className="relative z-10 flex-1 rounded-lg border border-emerald-700/60 bg-zinc-950/90 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                    className="hyphai-focus relative z-10 flex-1 rounded-lg border border-emerald-700/60 bg-zinc-950/90 px-3 py-2 text-sm text-zinc-100 focus:ring-1 focus:ring-emerald-600"
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
@@ -162,7 +162,7 @@ export function ConversationSidebar({
                       e.preventDefault();
                       startRename(conversation);
                     }}
-                    className="relative z-10 flex-1 truncate px-3 py-2.5 text-left text-sm text-zinc-300 transition"
+                    className="hyphai-interactive hyphai-focus relative z-10 flex-1 truncate rounded-lg px-3 py-2.5 text-left text-sm text-zinc-300 hover:text-zinc-100"
                     title="Двойной клик — переименовать"
                   >
                     {conversation.title}
@@ -173,16 +173,18 @@ export function ConversationSidebar({
                     <button
                       type="button"
                       onClick={() => startRename(conversation)}
-                      className="relative z-10 rounded px-1.5 py-1 text-xs text-zinc-600 opacity-0 transition hover:text-emerald-400 group-hover:opacity-100"
+                      className="hyphai-interactive hyphai-focus relative z-10 flex min-h-9 min-w-9 items-center justify-center rounded-lg text-xs text-zinc-500 opacity-0 hover:bg-zinc-800/80 hover:text-emerald-400 group-hover:opacity-100"
                       aria-label={uiText.sidebar.renameAria}
+                      title={uiText.sidebar.renameAria}
                     >
                       ✎
                     </button>
                     <button
                       type="button"
                       onClick={() => onDelete(conversation.id)}
-                      className="relative z-10 rounded px-1.5 py-1 text-xs text-zinc-600 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
+                      className="hyphai-interactive hyphai-focus relative z-10 flex min-h-9 min-w-9 items-center justify-center rounded-lg text-xs text-zinc-500 opacity-0 hover:bg-zinc-800/80 hover:text-red-400 group-hover:opacity-100"
                       aria-label={uiText.sidebar.deleteAria}
+                      title={uiText.sidebar.deleteAria}
                     >
                       ×
                     </button>
@@ -198,7 +200,7 @@ export function ConversationSidebar({
           <button
             type="button"
             onClick={onLogout}
-            className="w-full rounded-lg px-4 py-2 text-sm text-zinc-500 transition hover:bg-zinc-900/60 hover:text-zinc-300"
+            className="hyphai-interactive hyphai-focus w-full rounded-lg px-4 py-2.5 text-sm text-zinc-500 hover:bg-zinc-900/60 hover:text-zinc-300"
           >
             {uiText.sidebar.logout}
           </button>
