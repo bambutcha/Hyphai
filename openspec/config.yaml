@@ -12,6 +12,7 @@ rules:
   proposal:
     - Include Non-goals section
     - Reference hackathon demo requirements
+    - Write all artifact content in Russian; keep section headers ## Why, ## What Changes in English for OpenSpec compatibility
   tasks:
     - Break into verifiable chunks
     - Order: infra → api → web → integration
