@@ -1,8 +1,6 @@
 # Hyphai
 
-**Universal chat as a living network** — built with Spec-Driven Development.
-
-> Hyphae connect everything underground. AI weaves through every conversation.
+**Universal chat as a living network** — Spec-Driven Development + full Docker stack.
 
 ## Stack
 
@@ -11,67 +9,59 @@
 | Frontend | Next.js 16, React, TypeScript, Tailwind |
 | Backend | Hono on Bun |
 | Database | PostgreSQL + Kysely |
+| Cache / PubSub | Redis (WebSocket fan-out) |
+| Observability | Prometheus + Grafana |
 | Harness | OpenSpec |
 
-## Quick start
+## Quick start (Docker — всё сразу)
 
 ```bash
 cp .env.example .env
-echo 'NEXT_PUBLIC_API_URL=http://localhost:3001' > apps/web/.env.local
-
-docker compose up -d
-bun install
-bun run db:migrate
-bun run dev:api   # terminal 1 → :3001
-bun run dev:web   # terminal 2 → :3000
+docker compose up --build -d
 ```
 
-Postgres runs on **port 5433** (avoids conflict with local Postgres on 5432).
+| Service | URL |
+|---|---|
+| Web | http://localhost:3000 |
+| API | http://localhost:3001 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3002 (admin / admin) |
 
-## What is harness engineering?
-
-Simple analogy:
-
-| Part | In a car | In AI development |
-|---|---|---|
-| Engine | Motor | LLM (Claude, GPT…) |
-| Harness | Steering, brakes, dashboard, rules | Specs, skills, tools, checks |
-| Driver | You | Harness engineer (you) |
-
-The model alone is powerful but unpredictable. The **harness** is everything around it that makes work reliable: instructions, memory, verification, rollback.
-
-**OpenSpec** is one harness layer: before code is written, specs define WHAT to build. The AI reads specs and implements against them — not against chat history that gets lost.
-
-### This project's harness layers
-
-```
-openspec/changes/add-universal-chat/
-├── proposal.md   ← WHY we build this
-├── design.md     ← HOW (architecture decisions)
-├── specs/        ← WHAT (testable requirements)
-└── tasks.md      ← checklist for implementation
-```
-
-Cursor skills in `.cursor/skills/` guide the AI through `/opsx-propose` and `/opsx-apply`.
-
-## OpenSpec workflow
+## Local dev (без Docker для web/api)
 
 ```bash
-# In Cursor chat:
-/opsx-propose add dark mode
-/opsx-apply
-/opsx-archive
+docker compose up -d postgres redis
+cp .env.example .env
+echo 'NEXT_PUBLIC_API_URL=http://localhost:3001' > apps/web/.env.local
+echo 'NEXT_PUBLIC_WS_URL=ws://localhost:3001' >> apps/web/.env.local
+
+bun install
+bun run db:migrate
+bun run dev:api   # :3001
+bun run dev:web   # :3000
 ```
 
-## API
+Postgres в dev-compose на порту **5433** (если только postgres/redis подняты — см. `.env.example`).
 
-| Method | Path | Description |
+## Auth
+
+- `POST /api/auth/register` — `{ email, password, displayName? }`
+- `POST /api/auth/login` — `{ email, password }`
+- Все `/api/conversations/*` требуют `Authorization: Bearer <token>`
+
+## WebSocket
+
+- `ws://localhost:3001/ws?token=JWT&conversationId=UUID`
+- Событие `messages.created` — realtime обновление чата
+
+## Что из инфраструктуры имеет смысл
+
+| Технология | Hyphai | Зачем |
 |---|---|---|
-| GET | `/api/conversations` | List chats |
-| POST | `/api/conversations` | Create chat |
-| DELETE | `/api/conversations/:id` | Delete chat |
-| GET | `/api/conversations/:id/messages` | Message history |
-| POST | `/api/conversations/:id/messages` | Send message (+ echo reply) |
+| **Redis** | ✅ | Pub/Sub для WebSocket между инстансами API |
+| **Prometheus + Grafana** | ✅ | Метрики API (`/metrics`), harness eval |
+| **RabbitMQ** | ❌ | Нужен для async jobs (email, LLM queue) — overkill для MVP |
+| **Kafka** | ❌ | Event streaming at scale — overkill для хакатона |
 
 ## License
 
