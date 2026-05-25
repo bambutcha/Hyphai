@@ -6,7 +6,7 @@ context: |
          Hono on Bun (apps/api); PostgreSQL + Kysely.
   Monorepo with Bun workspaces. Docker Compose for Postgres.
   Spec-Driven Development via OpenSpec — specs are source of truth.
-  Conventional commits. Dark theme UI with mycelium/hyphae aesthetic.
+  Conventional commits. Success SaaS UI.
 
 rules:
   proposal:
