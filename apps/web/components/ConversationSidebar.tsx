@@ -2,6 +2,7 @@
 
 import type { Conversation } from '@/lib/api';
 import { LoadingState } from '@/components/ui/LoadingState';
+import { uiText } from '@/lib/ui-text';
 
 interface ConversationSidebarProps {
   conversations: Conversation[];
@@ -30,7 +31,7 @@ export function ConversationSidebar({
     <aside className="flex h-full w-full flex-col border-r border-emerald-900/40 bg-zinc-950 md:w-72 lg:w-80">
       <div className="border-b border-emerald-900/40 px-4 py-5">
         <h1 className="text-xl font-semibold tracking-tight text-emerald-400">Hyphai</h1>
-        <p className="mt-1 text-xs text-zinc-500">Universal chat · living network</p>
+        <p className="mt-1 text-xs text-zinc-500">{uiText.sidebar.tagline}</p>
       </div>
 
       <div className="p-3">
@@ -39,14 +40,14 @@ export function ConversationSidebar({
           onClick={onCreate}
           className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500"
         >
-          + New chat
+          + {uiText.sidebar.newChat}
         </button>
       </div>
 
       <ul className="flex-1 overflow-y-auto px-2 pb-4">
         {loading ? (
           <li>
-            <LoadingState label="Загрузка чатов…" compact />
+            <LoadingState label={uiText.sidebar.loadingChats} compact />
           </li>
         ) : loadError ? (
           <li className="px-3 py-6 text-center">
@@ -57,12 +58,12 @@ export function ConversationSidebar({
                 onClick={onRetryLoad}
                 className="mt-3 rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-700"
               >
-                Повторить
+                {uiText.sidebar.retry}
               </button>
             )}
           </li>
         ) : conversations.length === 0 ? (
-          <li className="px-3 py-6 text-center text-sm text-zinc-500">No conversations yet</li>
+          <li className="px-3 py-6 text-center text-sm text-zinc-500">{uiText.sidebar.empty}</li>
         ) : (
           conversations.map((conversation) => (
             <li key={conversation.id} className="group mb-1">
@@ -82,7 +83,7 @@ export function ConversationSidebar({
                   type="button"
                   onClick={() => onDelete(conversation.id)}
                   className="rounded px-2 py-1 text-xs text-zinc-600 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
-                  aria-label="Delete conversation"
+                  aria-label={uiText.sidebar.deleteAria}
                 >
                   x
                 </button>
@@ -98,7 +99,7 @@ export function ConversationSidebar({
             onClick={onLogout}
             className="w-full rounded-lg px-4 py-2 text-sm text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300"
           >
-            Выйти
+            {uiText.sidebar.logout}
           </button>
         </div>
       )}

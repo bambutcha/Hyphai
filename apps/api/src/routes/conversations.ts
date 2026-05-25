@@ -123,7 +123,7 @@ export function createConversationRoutes(db: Kysely<DB>) {
       .values({
         conversation_id: id,
         role: 'assistant',
-        content: `Hyphai received: "${content}" — connect an LLM harness here for real replies.`,
+        content: `Hyphai получил: «${content}» — подключите LLM harness для настоящих ответов.`,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
