@@ -1,51 +1,51 @@
-## Context
+## Контекст
 
-Greenfield monorepo. OpenSpec change `add-universal-chat`. Target stack matches BOS.PRO surface: TypeScript, React, Postgres — with Hono + Bun for API and Next.js 16 for UI.
+Greenfield monorepo. OpenSpec change `add-universal-chat`. Стек как у BOS.PRO: TypeScript, React, Postgres — плюс Hono + Bun для API и Next.js 16 для UI.
 
-## Goals / Non-Goals
+## Цели / Не-цели
 
-**Goals:**
-- Working universal chat demo with persistent Postgres storage
-- Clean separation: `apps/web` (UI) + `apps/api` (Hono)
-- Type-safe DB access via Kysely
-- Runnable via `docker compose up` + `bun run dev`
+**Цели:**
+- Рабочий демо универсального чата с Postgres
+- Разделение: `apps/web` (UI) + `apps/api` (Hono)
+- Type-safe доступ к БД через Kysely
+- Запуск через `docker compose up` + `bun run dev`
 
-**Non-Goals:**
-- Auth, WebSocket, real AI models, multi-tenant
+**Не-цели:**
+- Auth, WebSocket, реальные AI-модели, multi-tenant
 
-## Decisions
+## Решения
 
-### Monorepo with Bun workspaces
-**Why:** Single repo, shared scripts, Bun runs both Hono and Next.js dev servers.
-**Alternative:** Separate repos — rejected for hackathon simplicity.
+### Monorepo с Bun workspaces
+**Почему:** один репо, общие скрипты, Bun крутит и Hono, и Next.js.
+**Альтернатива:** отдельные репо — отвергнуто для простоты хакатона.
 
-### Hono on Bun (separate API) vs Next.js Route Handlers
-**Why:** Explicit API layer demonstrates fullstack architecture; Hono is lightweight and TypeScript-native.
-**Alternative:** Next.js API routes — simpler but less aligned with user's Consentry/Hono preference.
+### Hono на Bun (отдельный API) vs Next.js Route Handlers
+**Почему:** явный API-слой, Hono лёгкий и TypeScript-native.
+**Альтернатива:** API routes в Next.js — проще, но менее явная архитектура.
 
-### Kysely over Drizzle
-**Why:** Type-safe SQL without ORM magic; matches Consentry patterns; explicit queries for demo/debug.
-**Alternative:** Drizzle — better for relation-heavy schemas, overkill here.
+### Kysely вместо Drizzle
+**Почему:** type-safe SQL без магии ORM; явные запросы для дебага.
+**Альтернатива:** Drizzle — избыточен для простой схемы чата.
 
-### Echo assistant replies
-**Why:** Universal chat MVP without external AI API keys. Proves message flow end-to-end.
-**Alternative:** OpenAI integration — out of scope for hackathon entry task.
+### Echo-ответы ассистента
+**Почему:** MVP без API-ключей LLM. Доказывает полный flow сообщений.
+**Альтернатива:** OpenAI — вне scope задачи хакатона.
 
-### UUID primary keys
-**Why:** Safe for distributed/API exposure; standard for chat apps.
+### UUID как primary keys
+**Почему:** безопасно для API; стандарт для чатов.
 
-## Risks / Trade-offs
+## Риски / Компромиссы
 
-- [CORS between web:3000 and api:3001] → Enable Hono CORS middleware for localhost
-- [No Bun on all machines] → Document Node fallback in README
-- [No realtime] → UI refetches after send; acceptable for MVP
+- [CORS web:3000 ↔ api:3001] → CORS middleware в Hono для localhost
+- [Не у всех есть Bun] → описать fallback в README
+- [Нет realtime] → UI перезапрашивает после отправки; ок для MVP
 
-## Migration Plan
+## План запуска
 
-1. `docker compose up -d` — start Postgres
-2. Run SQL migrations via api script
-3. `bun run dev` — start api + web concurrently
+1. `docker compose up -d` — Postgres
+2. SQL-миграции через скрипт api
+3. `bun run dev` — api + web
 
-## Open Questions
+## Открытые вопросы
 
-(none — ready to implement)
+(нет — готовы к реализации)

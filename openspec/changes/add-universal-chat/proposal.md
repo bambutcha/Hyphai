@@ -1,38 +1,38 @@
-## Why
+## Зачем
 
-Hyphai needs a universal chat — a general-purpose messaging interface where users manage multiple conversations with persistent history. This is the hackathon deliverable demonstrating Spec-Driven Development with OpenSpec: specs first, then code.
+Hyphai — универсальный чат: интерфейс для нескольких диалогов с сохранением истории. Это задача хакатона, демонстрирующая Spec-Driven Development через OpenSpec: сначала спеки, потом код.
 
-## What Changes
+## Что меняется
 
-- Add conversation management (create, list, select, delete)
-- Add message exchange (send user messages, store in Postgres, display history)
-- Add chat UI (sidebar + message pane, responsive, dark theme)
-- Add Hono API on Bun with Kysely + PostgreSQL
-- Add Next.js 16 frontend consuming the API
-- Add Docker Compose for local Postgres
+- Управление диалогами (создать, список, выбрать, удалить)
+- Обмен сообщениями (отправка, хранение в Postgres, отображение истории)
+- UI чата (сайдбар + область сообщений, адаптив, тёмная тема)
+- Hono API на Bun с Kysely + PostgreSQL
+- Next.js 16 фронтенд, потребляющий API
+- Docker Compose для локального Postgres
 
-## Capabilities
+## Возможности (Capabilities)
 
-### New Capabilities
+### Новые
 
-- `conversations`: CRUD for chat threads stored in PostgreSQL
-- `messages`: Send and retrieve messages within a conversation
-- `chat-ui`: Frontend interface for browsing and chatting
+- `conversations`: CRUD диалогов в PostgreSQL
+- `messages`: отправка и получение сообщений внутри диалога
+- `chat-ui`: фронтенд для просмотра и переписки
 
-### Modified Capabilities
+### Изменённые
 
-(none — greenfield project)
+(нет — проект с нуля)
 
-## Impact
+## Влияние
 
-- New monorepo structure: `apps/web`, `apps/api`
-- New PostgreSQL schema: `conversations`, `messages`
-- New REST API on port 3001, web on port 3000
-- Docker required for Postgres
+- Monorepo: `apps/web`, `apps/api`
+- Схема PostgreSQL: `conversations`, `messages`
+- REST API на порту 3001, web на 3000
+- Docker для Postgres
 
-## Non-goals
+## Не делаем (Non-goals)
 
-- Real LLM / AI integration (placeholder echo replies only)
-- User authentication
-- WebSocket / realtime (polling or refresh on action is enough for MVP)
-- Production deployment
+- Реальная LLM / AI (только echo-ответы-заглушки)
+- Авторизация пользователей
+- WebSocket / realtime (достаточно обновления после действия)
+- Продакшен-деплой

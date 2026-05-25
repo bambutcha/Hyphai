@@ -1,37 +1,37 @@
 ## ADDED Requirements
 
-### Requirement: List messages in conversation
-The system SHALL return all messages for a conversation ordered by created_at ascending.
+### Requirement: Список сообщений в диалоге
+Система SHALL возвращать все сообщения диалога, отсортированные по created_at по возрастанию.
 
-#### Scenario: Empty conversation
-- **WHEN** a conversation has no messages
-- **THEN** the API returns an empty array
+#### Scenario: Пустой диалог
+- **WHEN** в диалоге нет сообщений
+- **THEN** API возвращает пустой массив
 
-#### Scenario: Ordered history
-- **WHEN** a conversation has three messages sent at different times
-- **THEN** messages are returned oldest-first
+#### Scenario: Упорядоченная история
+- **WHEN** в диалоге три сообщения в разное время
+- **THEN** сообщения возвращаются от старых к новым
 
-### Requirement: Send user message
-The system SHALL accept a user message and persist it to PostgreSQL.
+### Requirement: Отправка сообщения пользователя
+Система SHALL принимать сообщение пользователя и сохранять в PostgreSQL.
 
-#### Scenario: Valid message
-- **WHEN** client sends `{ "content": "Hello" }` to a valid conversation
-- **THEN** a message with role `user` is stored and returned with id and timestamp
+#### Scenario: Валидное сообщение
+- **WHEN** клиент шлёт `{ "content": "Привет" }` в существующий диалог
+- **THEN** сохраняется сообщение с role `user`, возвращаются id и timestamp
 
-#### Scenario: Empty content rejected
-- **WHEN** client sends `{ "content": "" }` or whitespace-only content
-- **THEN** the API returns HTTP 400
+#### Scenario: Пустой текст отклоняется
+- **WHEN** клиент шлёт `{ "content": "" }` или только пробелы
+- **THEN** API возвращает HTTP 400
 
-### Requirement: Assistant echo reply
-The system SHALL automatically create an assistant reply after each user message.
+### Requirement: Echo-ответ ассистента
+Система SHALL автоматически создавать ответ ассистента после каждого сообщения пользователя.
 
-#### Scenario: Echo after send
-- **WHEN** user sends "Hello"
-- **THEN** an assistant message is stored with content acknowledging the user input (echo/placeholder)
+#### Scenario: Echo после отправки
+- **WHEN** пользователь шлёт «Привет»
+- **THEN** сохраняется сообщение assistant с текстом-подтверждением (echo/заглушка)
 
-### Requirement: Conversation updated_at on new message
-The system SHALL update the parent conversation's updated_at when a message is sent.
+### Requirement: Обновление updated_at диалога
+Система SHALL обновлять updated_at диалога при новом сообщении.
 
-#### Scenario: Timestamp bump
-- **WHEN** a new message is sent to a conversation
-- **THEN** that conversation's updated_at reflects the latest message time
+#### Scenario: Обновление времени
+- **WHEN** отправлено новое сообщение
+- **THEN** updated_at диалога = время последнего сообщения
