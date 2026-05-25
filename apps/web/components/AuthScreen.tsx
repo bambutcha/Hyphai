@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { api, setAuthToken } from '@/lib/api';
+import { api, getErrorMessage, setAuthToken } from '@/lib/api';
 
 interface AuthScreenProps {
+  initialError?: string | null;
   onAuthenticated: () => void;
 }
 
-export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
+export function AuthScreen({ initialError = null, onAuthenticated }: AuthScreenProps) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +28,7 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       setAuthToken(result.token);
       onAuthenticated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Auth failed');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -65,7 +66,11 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100"
           />
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && (
+            <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-400" role="alert">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
