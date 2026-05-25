@@ -1,0 +1,21 @@
+{
+  "name": "@hyphai/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --env-file=../../.env run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "db:migrate": "bun --env-file=../../.env run src/db/migrate.ts"
+  },
+  "dependencies": {
+    "hono": "^4.7.10",
+    "kysely": "^0.27.6",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.15",
+    "@types/pg": "^8.15.2",
+    "typescript": "^5.8.3"
+  }
+}
