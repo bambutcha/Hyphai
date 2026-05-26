@@ -28,7 +28,7 @@ export default function SharePage() {
   }, [slug]);
 
   return (
-    <div className="relative min-h-dvh">
+    <div className="relative min-h-dvh pt-safe pb-safe">
       <HyphaeBackground />
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-10">
         <p className="text-xs uppercase tracking-wider text-emerald-500/80">{uiText.share.readOnly}</p>

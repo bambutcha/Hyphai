@@ -370,7 +370,7 @@ export function ChatApp() {
             type="button"
             aria-label={uiText.shell.openMenu}
             onClick={openMobileMenu}
-            className="hyphai-focus hyphai-interactive fixed top-3 left-3 z-50 rounded-lg glass-panel p-2 text-zinc-300 md:hidden"
+            className="hyphai-focus hyphai-interactive fixed left-3 top-safe z-50 rounded-lg glass-panel p-2 text-zinc-300 md:hidden"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
               <path

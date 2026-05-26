@@ -11,6 +11,10 @@
   --hyphai-border-strong: rgba(52, 211, 153, 0.28);
   --background: var(--hyphai-bg-deep);
   --foreground: #fafafa;
+  --hyphai-safe-top: env(safe-area-inset-top, 0px);
+  --hyphai-safe-right: env(safe-area-inset-right, 0px);
+  --hyphai-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --hyphai-safe-left: env(safe-area-inset-left, 0px);
 }
 
 @theme inline {
@@ -25,6 +29,27 @@ body {
   background: var(--hyphai-bg-deep);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.pt-safe {
+  padding-top: calc(1rem + var(--hyphai-safe-top));
+}
+
+.pb-safe {
+  padding-bottom: calc(1rem + var(--hyphai-safe-bottom));
+}
+
+.top-safe {
+  top: calc(0.75rem + var(--hyphai-safe-top));
+}
+
+.bottom-safe {
+  bottom: calc(1rem + var(--hyphai-safe-bottom));
 }
 
 .font-display {

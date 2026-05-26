@@ -71,6 +71,31 @@ export function MessagePane({
     }
   };
 
+  const renderMessageActions = (message: Message) => (
+    <>
+      <button
+        type="button"
+        onClick={() => void copyMessage(message.content)}
+        aria-label={uiText.copy.aria}
+        title={uiText.copy.action}
+        className="hyphai-interactive hyphai-focus flex min-h-9 min-w-9 items-center justify-center rounded-md bg-zinc-900/90 px-2 text-[10px] text-zinc-400 ring-1 ring-zinc-700 hover:text-emerald-400 md:min-h-0 md:min-w-0 md:py-0.5"
+      >
+        {uiText.copy.action}
+      </button>
+      {onForkMessage && (
+        <button
+          type="button"
+          onClick={() => onForkMessage(message.id)}
+          aria-label={uiText.fork.action}
+          title={uiText.fork.action}
+          className="hyphai-interactive hyphai-focus flex min-h-9 min-w-9 items-center justify-center rounded-md bg-zinc-900/90 px-2 text-[10px] text-zinc-400 ring-1 ring-zinc-700 hover:text-emerald-400 md:min-h-0 md:min-w-0 md:py-0.5"
+        >
+          {uiText.fork.action}
+        </button>
+      )}
+    </>
+  );
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
   }, [messages, streamingContent, reduced]);
@@ -83,8 +108,8 @@ export function MessagePane({
 
   return (
     <section className="chat-main-area relative flex h-full min-h-0 flex-1 flex-col">
-      <header className="glass-panel z-10 mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border-0 px-4 py-4 md:mx-6 md:px-6">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+      <header className="glass-panel z-10 mx-4 mt-4 flex flex-col gap-3 rounded-xl border-0 px-4 py-4 md:mx-6 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6">
+        <div className="flex min-w-0 items-center gap-2">
           {onOpenMenu && (
             <button
               type="button"
@@ -106,7 +131,7 @@ export function MessagePane({
             {conversationTitle}
           </h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:gap-3">
           {llmModels.length > 0 && selectedModelId && onModelChange && (
             <ModelSelector
               models={llmModels}
@@ -119,7 +144,7 @@ export function MessagePane({
             <button
               type="button"
               onClick={onShare}
-              className="hyphai-interactive hyphai-focus rounded-lg px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800/80 hover:text-emerald-400"
+              className="hyphai-interactive hyphai-focus min-h-9 rounded-lg px-3 py-1 text-xs text-zinc-400 hover:bg-zinc-800/80 hover:text-emerald-400 md:min-h-0 md:px-2"
             >
               {uiText.share.enable}
             </button>
@@ -161,39 +186,28 @@ export function MessagePane({
                   }`}
                 >
                   <div
-                    className={`group/bubble relative max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    className={`group/bubble relative flex max-w-[85%] flex-col gap-2 rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                       message.role === 'user'
                         ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-emerald-950 shadow-[0_4px_24px_rgba(52,211,153,0.25)]'
                         : 'glass-panel text-zinc-100 shadow-lg shadow-black/20'
                     }`}
                   >
-                    <div className="absolute -top-2 right-2 flex gap-1 opacity-100 transition sm:opacity-0 sm:group-hover/bubble:opacity-100 sm:group-focus-within/bubble:opacity-100">
-                      <button
-                        type="button"
-                        onClick={() => void copyMessage(message.content)}
-                        aria-label={uiText.copy.aria}
-                        title={uiText.copy.action}
-                        className="hyphai-interactive hyphai-focus flex min-h-9 min-w-9 items-center justify-center rounded-md bg-zinc-900/90 px-2 text-[10px] text-zinc-400 ring-1 ring-zinc-700 hover:text-emerald-400 sm:min-h-0 sm:min-w-0 sm:py-0.5"
-                      >
-                        {uiText.copy.action}
-                      </button>
-                      {onForkMessage && (
-                        <button
-                          type="button"
-                          onClick={() => onForkMessage(message.id)}
-                          aria-label={uiText.fork.action}
-                          title={uiText.fork.action}
-                          className="hyphai-interactive hyphai-focus flex min-h-9 min-w-9 items-center justify-center rounded-md bg-zinc-900/90 px-2 text-[10px] text-zinc-400 ring-1 ring-zinc-700 hover:text-emerald-400 sm:min-h-0 sm:min-w-0 sm:py-0.5"
-                        >
-                          {uiText.fork.action}
-                        </button>
+                    <div
+                      className={`flex shrink-0 justify-end gap-1 border-b pb-2 md:absolute md:-top-2 md:right-2 md:border-0 md:p-0 md:pb-0 md:opacity-0 md:transition md:group-hover/bubble:opacity-100 md:group-focus-within/bubble:opacity-100 ${
+                        message.role === 'user'
+                          ? 'border-emerald-950/20'
+                          : 'border-zinc-700/60'
+                      }`}
+                    >
+                      {renderMessageActions(message)}
+                    </div>
+                    <div className="min-w-0">
+                      {message.role === 'assistant' ? (
+                        <MessageMarkdown content={message.content} />
+                      ) : (
+                        message.content
                       )}
                     </div>
-                    {message.role === 'assistant' ? (
-                      <MessageMarkdown content={message.content} />
-                    ) : (
-                      message.content
-                    )}
                   </div>
                 </motion.div>
               ))}
@@ -236,7 +250,10 @@ export function MessagePane({
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="relative z-10 px-4 pb-6 pt-2 md:px-8 md:pb-8">
+      <form
+        onSubmit={handleSubmit}
+        className="relative z-10 px-4 pb-6 pt-2 pb-safe md:px-8 md:pb-8"
+      >
         <div className="composer-glow glass-panel mx-auto flex max-w-3xl gap-3 rounded-2xl p-2 transition-shadow">
           <input
             type="text"
@@ -244,7 +261,7 @@ export function MessagePane({
             onChange={(e) => onDraftChange(e.target.value)}
             placeholder={uiText.messages.placeholder}
             disabled={sending}
-            className="hyphai-focus flex-1 bg-transparent px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="hyphai-focus min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
           />
           <GlowButton
             type="submit"

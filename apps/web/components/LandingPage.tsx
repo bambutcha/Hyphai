@@ -14,21 +14,25 @@ export function LandingPage({ onLogin }: LandingPageProps) {
   return (
     <div className="relative min-h-dvh overflow-hidden bg-[var(--hyphai-bg-deep)]">
       <HyphaeBackground />
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col px-6 py-16 md:py-24">
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col px-5 py-12 pt-safe pb-safe md:px-6 md:py-24">
         <section className="flex flex-col items-center text-center md:flex-row md:items-center md:gap-12 md:text-left">
           <HyphaeIllustration className="mb-8 shrink-0 md:mb-0" />
           <div className="max-w-xl">
             <h1 className="font-display text-4xl font-bold tracking-tight text-emerald-400 md:text-5xl">
               {uiText.landing.heroTitle}
             </h1>
-            <p className="mt-4 text-lg leading-relaxed text-zinc-400">{uiText.landing.heroSubtitle}</p>
+            <p className="mt-4 text-base leading-relaxed text-zinc-400 sm:text-lg">
+              {uiText.landing.heroSubtitle}
+            </p>
             <div className="mt-8">
-              <GlowButton onClick={onLogin}>{uiText.landing.cta}</GlowButton>
+              <GlowButton onClick={onLogin} className="w-full sm:w-auto">
+                {uiText.landing.cta}
+              </GlowButton>
             </div>
           </div>
         </section>
 
-        <section className="mt-20 grid gap-4 md:grid-cols-3">
+        <section className="mt-12 grid gap-4 md:mt-20 md:grid-cols-3">
           {uiText.landing.features.map((feature) => (
             <GlassPanel key={feature.title} className="p-6">
               <h3 className="font-display text-lg font-semibold text-zinc-100">{feature.title}</h3>

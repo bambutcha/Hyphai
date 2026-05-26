@@ -23,7 +23,7 @@ export function ChatEmptyState({ variant, onCreateChat }: ChatEmptyStateProps) {
   const cta = isWelcome ? uiText.empty.welcomeCta : uiText.empty.pickCta;
 
   return (
-    <div className="chat-main-area relative flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-6 py-12">
+    <div className="chat-main-area relative flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-6 py-12 pt-safe">
       {isWelcome ? (
         <HyphaeGraphEmpty className="mb-6" onNodeClick={onCreateChat} />
       ) : (

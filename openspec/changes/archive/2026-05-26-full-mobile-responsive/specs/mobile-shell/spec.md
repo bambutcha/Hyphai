@@ -1,8 +1,5 @@
-# mobile-shell Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change world-ready-product. Update Purpose after archive.
-## Requirements
 ### Requirement: Mobile drawer для сайдбара
 UI SHALL на viewport `<768px` скрывать постоянный сайдбар и показывать его в off-canvas drawer по кнопке меню. Fixed-элементы (кнопка меню, composer, toasts) SHALL учитывать `safe-area-inset` через design tokens проекта.
 
@@ -22,6 +19,8 @@ UI SHALL на viewport `<768px` скрывать постоянный сайдб
 - **WHEN** приложение открыто на устройстве с вырезом/notch
 - **THEN** composer и нижние toasts не перекрываются home indicator; верхние fixed-кнопки не под notch
 
+## ADDED Requirements
+
 ### Requirement: Viewport и отсутствие горизонтального скролла
 Приложение SHALL использовать `viewport-fit=cover` и не допускать горизонтального скролла основного контента на ширине 320px–428px.
 
@@ -32,4 +31,3 @@ UI SHALL на viewport `<768px` скрывать постоянный сайдб
 #### Scenario: Корневой layout
 - **WHEN** пользователь в ChatApp
 - **THEN** корневой контейнер использует `100dvh`/`min-h-dvh` и `overflow-x: hidden` на уровне shell
-

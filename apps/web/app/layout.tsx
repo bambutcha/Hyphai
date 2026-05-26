@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Syne } from 'next/font/google';
 import { ToastProvider } from '@/components/ui/ToastProvider';
@@ -24,6 +24,12 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: uiText.meta.title,
   description: uiText.meta.description,
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

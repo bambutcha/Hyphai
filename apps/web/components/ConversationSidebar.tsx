@@ -173,7 +173,7 @@ export function ConversationSidebar({
                     <button
                       type="button"
                       onClick={() => startRename(conversation)}
-                      className="hyphai-interactive hyphai-focus relative z-10 flex min-h-9 min-w-9 items-center justify-center rounded-lg text-xs text-zinc-500 opacity-0 hover:bg-zinc-800/80 hover:text-emerald-400 group-hover:opacity-100"
+                      className="hyphai-interactive hyphai-focus relative z-10 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-xs text-zinc-500 opacity-100 hover:bg-zinc-800/80 hover:text-emerald-400 md:min-h-9 md:min-w-9 md:opacity-0 md:group-hover:opacity-100"
                       aria-label={uiText.sidebar.renameAria}
                       title={uiText.sidebar.renameAria}
                     >
@@ -182,7 +182,7 @@ export function ConversationSidebar({
                     <button
                       type="button"
                       onClick={() => onDelete(conversation.id)}
-                      className="hyphai-interactive hyphai-focus relative z-10 flex min-h-9 min-w-9 items-center justify-center rounded-lg text-xs text-zinc-500 opacity-0 hover:bg-zinc-800/80 hover:text-red-400 group-hover:opacity-100"
+                      className="hyphai-interactive hyphai-focus relative z-10 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-xs text-zinc-500 opacity-100 hover:bg-zinc-800/80 hover:text-red-400 md:min-h-9 md:min-w-9 md:opacity-0 md:group-hover:opacity-100"
                       aria-label={uiText.sidebar.deleteAria}
                       title={uiText.sidebar.deleteAria}
                     >

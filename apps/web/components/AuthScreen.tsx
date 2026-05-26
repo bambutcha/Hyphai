@@ -88,7 +88,7 @@ export function AuthScreen({ initialError = null, onAuthenticated }: AuthScreenP
   };
 
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[var(--hyphai-bg-deep)] px-4">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[var(--hyphai-bg-deep)] px-4 pt-safe pb-safe">
       <HyphaeBackground />
       <motion.div
         variants={fadeScale}
@@ -97,7 +97,7 @@ export function AuthScreen({ initialError = null, onAuthenticated }: AuthScreenP
         transition={motionTransition(!!reduced)}
         className="relative z-10 w-full max-w-md"
       >
-        <GlassPanel className="p-8 shadow-[0_0_80px_rgba(52,211,153,0.12)]">
+        <GlassPanel className="p-6 sm:p-8 shadow-[0_0_80px_rgba(52,211,153,0.12)]">
           <h1 className="font-display text-3xl font-bold tracking-tight text-emerald-400">Hyphai</h1>
           <p className="mt-1 text-sm text-zinc-500">Войди, чтобы продолжить</p>
           <form noValidate onSubmit={handleSubmit} className="mt-6 space-y-4">
