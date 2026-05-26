@@ -8,6 +8,7 @@ import type { LlmModelOption, Message } from '@/lib/api';
 import { ModelBadge, type ModelMeta } from '@/components/ModelBadge';
 import { ConnectionBadge, type ConnectionStatus } from '@/components/ui/ConnectionBadge';
 import { MessageListSkeleton } from '@/components/ui/MessageListSkeleton';
+import { useToast } from '@/components/ui/ToastProvider';
 import { GlowButton } from '@/components/visual/GlowButton';
 import { messageBubble, motionTransition } from '@/lib/motion';
 import { uiText } from '@/lib/ui-text';
@@ -54,7 +55,21 @@ export function MessagePane({
   onShare,
 }: MessagePaneProps) {
   const reduced = useReducedMotion();
+  const toast = useToast();
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const copyMessage = async (content: string) => {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        toast.error(uiText.copy.failed);
+        return;
+      }
+      await navigator.clipboard.writeText(content);
+      toast.success(uiText.copy.success);
+    } catch {
+      toast.error(uiText.copy.failed);
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
@@ -152,16 +167,28 @@ export function MessagePane({
                         : 'glass-panel text-zinc-100 shadow-lg shadow-black/20'
                     }`}
                   >
-                    {onForkMessage && (
+                    <div className="absolute -top-2 right-2 flex gap-1 opacity-100 transition sm:opacity-0 sm:group-hover/bubble:opacity-100 sm:group-focus-within/bubble:opacity-100">
                       <button
                         type="button"
-                        onClick={() => onForkMessage(message.id)}
-                        className="hyphai-interactive hyphai-focus absolute -top-2 right-2 rounded-md bg-zinc-900/90 px-2 py-0.5 text-[10px] text-zinc-400 opacity-0 ring-1 ring-zinc-700 transition group-hover/bubble:opacity-100 hover:text-emerald-400"
-                        title={uiText.fork.action}
+                        onClick={() => void copyMessage(message.content)}
+                        aria-label={uiText.copy.aria}
+                        title={uiText.copy.action}
+                        className="hyphai-interactive hyphai-focus flex min-h-9 min-w-9 items-center justify-center rounded-md bg-zinc-900/90 px-2 text-[10px] text-zinc-400 ring-1 ring-zinc-700 hover:text-emerald-400 sm:min-h-0 sm:min-w-0 sm:py-0.5"
                       >
-                        {uiText.fork.action}
+                        {uiText.copy.action}
                       </button>
-                    )}
+                      {onForkMessage && (
+                        <button
+                          type="button"
+                          onClick={() => onForkMessage(message.id)}
+                          aria-label={uiText.fork.action}
+                          title={uiText.fork.action}
+                          className="hyphai-interactive hyphai-focus flex min-h-9 min-w-9 items-center justify-center rounded-md bg-zinc-900/90 px-2 text-[10px] text-zinc-400 ring-1 ring-zinc-700 hover:text-emerald-400 sm:min-h-0 sm:min-w-0 sm:py-0.5"
+                        >
+                          {uiText.fork.action}
+                        </button>
+                      )}
+                    </div>
                     {message.role === 'assistant' ? (
                       <MessageMarkdown content={message.content} />
                     ) : (

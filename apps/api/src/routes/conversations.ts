@@ -132,22 +132,18 @@ export function createConversationRoutes(db: Kysely<DB>) {
 
     if (!source) return c.json({ error: 'Not found' }, 404);
 
-    const anchor = await db
-      .selectFrom('messages')
-      .selectAll()
-      .where('id', '=', messageId)
-      .where('conversation_id', '=', id)
-      .executeTakeFirst();
-
-    if (!anchor) return c.json({ error: 'Message not found' }, 404);
-
-    const history = await db
+    const ordered = await db
       .selectFrom('messages')
       .selectAll()
       .where('conversation_id', '=', id)
-      .where('created_at', '<=', anchor.created_at)
       .orderBy('created_at', 'asc')
+      .orderBy('id', 'asc')
       .execute();
+
+    const anchorIndex = ordered.findIndex((m) => m.id === messageId);
+    if (anchorIndex === -1) return c.json({ error: 'Message not found' }, 404);
+
+    const history = ordered.slice(0, anchorIndex + 1);
 
     const branchTitle = `Ветка: ${source.title}`.slice(0, 120);
 
