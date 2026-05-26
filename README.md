@@ -1,33 +1,118 @@
 # Hyphai
 
-**Universal chat as a living network** — Spec-Driven Development + full Docker stack.
+**Универсальный чат как живая сеть** — monorepo, Docker, spec-driven разработка.
 
-## Stack
+Full-stack чат с realtime, streaming LLM, ветками диалогов и публичным share. Код в `apps/web` + `apps/api`, инфраструктура — одной командой Docker Compose.
 
-| Layer | Tech |
-|---|---|
-| Frontend | Next.js 16, React, TypeScript, Tailwind |
-| Backend | Hono on Bun |
-| Database | PostgreSQL + Kysely |
-| Cache / PubSub | Redis (WebSocket fan-out) |
-| Observability | Prometheus + Grafana |
-| Harness | OpenSpec |
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-emerald?style=flat-square)](.github/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](https://opensource.org/licenses/MIT)
 
-## Quick start (Docker — всё сразу)
+---
+
+## Содержание
+
+- [Архитектура](#архитектура)
+- [Почему этот стек](#почему-этот-стек)
+- [Быстрый старт](#быстрый-старт)
+- [LLM (OpenRouter)](#llm-openrouter)
+- [Observability](#observability)
+- [CI/CD](#cicd)
+- [Deploy](#deploy)
+- [API](#api)
+- [Hyphae network](#hyphae-network)
+
+---
+
+## Архитектура
+
+```mermaid
+flowchart LR
+  Browser[Browser] --> Web[Next.js :3000]
+  Web --> API[Hono API :3001]
+  API --> PG[(PostgreSQL)]
+  API --> Redis[(Redis)]
+  Prom[Prometheus :9090] -->|scrape /metrics| API
+  Graf[Grafana :3002] --> Prom
+```
+
+| Слой | Пакет | Роль |
+|------|-------|------|
+| UI | `apps/web` | Next.js, auth, чат, landing |
+| API | `apps/api` | REST, WebSocket, OpenRouter |
+| DB / Pub/Sub | PostgreSQL, Redis | данные + fan-out WebSocket |
+| Metrics | Prometheus, Grafana | метрики API, дашборды |
+
+---
+
+## Почему этот стек
+
+### Frontend: Next.js 16 + React + Tailwind
+
+| Критерий | Next.js (Hyphai) | Remix / Vite SPA |
+|----------|------------------|------------------|
+| SSR / SEO | App Router из коробки | SPA хуже для landing |
+| Deploy | `standalone` в Docker | SSR настраивается отдельно |
+| DX | TypeScript, Tailwind 4 | Сопоставимо |
+
+### Backend: Hono + Bun
+
+| Критерий | Hono + Bun | Express + Node |
+|----------|------------|----------------|
+| Cold start | Быстрый Bun | Тяжелее runtime |
+| TypeScript | Нативно | Нужен toolchain |
+| WebSocket | Встроен в Hono | Отдельный `ws` + adapter |
+| Docker-образ | Меньше | node_modules крупнее |
+
+### Data: PostgreSQL + Kysely
+
+| Критерий | Postgres + Kysely | Prisma / SQLite |
+|----------|-------------------|-----------------|
+| SQL | Явные запросы, типы из схемы | ORM-магия / один файл |
+| Concurrency | Несколько инстансов API | SQLite блокирует запись |
+| Production | Стандарт для SaaS | SQLite — dev/edge |
+
+### Realtime: Redis pub/sub
+
+| Критерий | Redis Pub/Sub | Sticky / in-memory |
+|----------|---------------|---------------------|
+| Несколько API | События на любой инстанс | Affinity у LB |
+| Scale | Один Redis, канал на диалог | Ломается при горизонтали |
+
+### Workflow: OpenSpec
+
+| Критерий | OpenSpec | Ad-hoc specs |
+|----------|----------|--------------|
+| Source of truth | `openspec/specs/` | Разъезжается с кодом |
+| Цикл | proposal → design → tasks → apply | Нет единого процесса |
+
+### LLM: OpenRouter
+
+| Критерий | OpenRouter | Self-hosted |
+|----------|------------|-------------|
+| Старт | API key, без GPU | GPU, модели, ops |
+| Модели | Десятки через один API | Одна–две локально |
+
+---
+
+## Быстрый старт
+
+### Docker (всё сразу)
 
 ```bash
 cp .env.example .env
+# OPENROUTER_API_KEY в .env
 docker compose up --build -d
 ```
 
-| Service | URL |
-|---|---|
-| Web | http://localhost:3000 |
-| API | http://localhost:3001 |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3002 (admin / admin) |
+| Сервис | URL | Логин |
+|--------|-----|-------|
+| Web | http://localhost:3000 | регистрация в UI |
+| API | http://localhost:3001 | — |
+| Health | http://localhost:3001/health | — |
+| Prometheus | http://localhost:9090 | — |
+| Grafana | http://localhost:3002 | `admin` / `admin` |
 
-## Local dev (без Docker для web/api)
+### Локальная разработка (hot reload)
 
 ```bash
 docker compose up -d postgres redis
@@ -35,94 +120,118 @@ cp .env.example .env
 echo 'NEXT_PUBLIC_API_URL=http://localhost:3001' > apps/web/.env.local
 echo 'NEXT_PUBLIC_WS_URL=ws://localhost:3001' >> apps/web/.env.local
 
-bun install
-bun run db:migrate
+bun install && bun run db:migrate
 bun run dev:api   # :3001
 bun run dev:web   # :3000
 ```
 
-Postgres в dev-compose на порту **5433** (если только postgres/redis подняты — см. `.env.example`).
+Postgres на хосте: **5433**, Redis: **6379** (см. `docker-compose.yml` и `.env.example`).
+
+---
 
 ## LLM (OpenRouter)
 
-1. Зарегистрируйтесь на [openrouter.ai](https://openrouter.ai/) и создайте API key.
-2. В корневой `.env` (скопируйте из `.env.example`):
+1. Ключ: [openrouter.ai/keys](https://openrouter.ai/keys) → `OPENROUTER_API_KEY`.
+2. Дефолт: `OPENROUTER_MODEL=openai/gpt-oss-120b:free`.
+3. При **429** API пробует fallback: `gpt-oss-120b` → `liquid/lfm-2.5-1.2b-instruct` (бейдж в UI).
+4. Без ключа: `503` — `LLM not configured`.
 
-```bash
-OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=openai/gpt-oss-120b:free   # default; в UI: GPT-OSS, Gemma 4, DeepSeek, Nemotron, Авто
+| Режим | Модель | Когда |
+|-------|--------|-------|
+| Dev | `:free` tier | локально, демо |
+| Production | paid / лимитированная | публичный инстанс |
+
+---
+
+## Observability
+
+**Prometheus** собирает time series; **Grafana** визуализирует. Без них не видно нагрузку и число WebSocket.
+
+`GET http://localhost:3001/metrics`:
+
+| Метрика | Тип | Смысл |
+|---------|-----|-------|
+| `hyphai_http_requests_total` | counter | HTTP-запросы к API |
+| `hyphai_ws_connections` | gauge | активные WebSocket |
+
+**Prometheus** — `infra/prometheus/prometheus.yml`, scrape `api:3001` каждые **15s** → http://localhost:9090
+
+```promql
+hyphai_http_requests_total
+hyphai_ws_connections
 ```
 
-Free tier имеет лимиты (~50 req/день без credits). Без ключа API вернёт `503` с `LLM not configured`.
+**Grafana** — datasource Prometheus (`http://prometheus:9090`) provisioned → http://localhost:3002 (`admin`/`admin`).
 
-При **429** у выбранной модели (Gemma, DeepSeek, Qwen, Llama) API автоматически пробует запасные: `gpt-oss-120b` → `liquid/lfm-2.5-instruct`. В UI отображается бейдж fallback (`Запрошено: … · ответил: …`).
+Explore → Prometheus → `hyphai_http_requests_total` → Run. Дальше: panel/dashboard под RPS, WS, алерты.
 
-### Production / публичный инстанс
+---
 
-Для стабильного публичного деплоя **не полагайтесь только на `openrouter/free`** — лимиты free tier часто дают 429.
+## CI/CD
 
-| Режим | `OPENROUTER_MODEL` | Комментарий |
-|---|---|---|
-| Dev / демо | `openai/gpt-oss-120b:free` | Подходит для локальной разработки |
-| Стабильнее free | `openai/gpt-oss-120b:free` + credits на [openrouter.ai](https://openrouter.ai/credits) | Меньше 429 на популярных моделях |
-| Production | Платная или лимитированная модель, напр. `anthropic/claude-sonnet-4` | Задайте в `.env` и при необходимости скройте free-модели в UI |
+**Файл:** `.github/workflows/ci.yml`
 
-Пользовательский выбор модели в UI по-прежнему может отличаться от `OPENROUTER_MODEL` (дефолт сервера).
+| Триггер | Когда |
+|---------|-------|
+| `push` → `main` / `master` | каждый коммит |
+| `pull_request` → `main` / `master` | каждый PR |
 
-## Deploy in 5 min
+| Шаг | Действие |
+|-----|----------|
+| 1 | `bun install --frozen-lockfile` |
+| 2 | `bun run --filter @hyphai/api typecheck` |
+| 3 | `bun run --filter @hyphai/web build` |
 
-1. **Fork / clone** репозиторий, скопируйте `.env.example` → `.env`.
-2. Задайте секреты:
+**Зачем:** типы и сборка Next.js ломаются **до** merge, а не на проде.
 
-| Переменная | Обязательно | Описание |
-|---|---|---|
-| `DATABASE_URL` | ✅ | Postgres (managed или `docker compose`) |
-| `REDIS_URL` | ✅ | Redis для WebSocket pub/sub |
-| `JWT_SECRET` | ✅ | Случайная строка ≥ 32 символов |
-| `OPENROUTER_API_KEY` | ✅ | Ключ OpenRouter |
-| `OPENROUTER_MODEL` | рекомендуется | Дефолтная модель (см. таблицу выше) |
-| `NEXT_PUBLIC_API_URL` | ✅ | Публичный URL API, напр. `https://api.example.com` |
-| `NEXT_PUBLIC_WS_URL` | ✅ | `wss://api.example.com` |
-| `PUBLIC_WEB_URL` | для share | Публичный URL web, напр. `https://app.example.com` |
-| `CORS_ORIGINS` | ✅ | Origin фронтенда через запятую |
+```bash
+bun install
+bun run --filter @hyphai/api typecheck
+bun run --filter @hyphai/web build
+```
 
-3. **Миграции:** `bun run db:migrate` (или через entrypoint контейнера API).
-4. **Запуск:** `docker compose up --build -d` или два сервиса (web + api) за reverse proxy.
-5. Откройте web URL, зарегистрируйтесь, создайте чат.
+---
 
-| Сервис | Типичный URL |
-|---|---|
-| Web | `https://app.example.com` |
-| API | `https://api.example.com` |
-| Health | `GET /health` |
+## Deploy
 
-CI: `.github/workflows/ci.yml` — `bun install`, typecheck API, `next build`.
+| Переменная | ✅ | Назначение |
+|------------|:-:|------------|
+| `DATABASE_URL` | ✅ | PostgreSQL |
+| `REDIS_URL` | ✅ | WebSocket pub/sub |
+| `JWT_SECRET` | ✅ | ≥32 символов |
+| `OPENROUTER_API_KEY` | ✅ | LLM |
+| `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_WS_URL` | ✅ | публичный API / `wss://` |
+| `CORS_ORIGINS` | ✅ | origin фронта |
+| `OPENROUTER_MODEL`, `PUBLIC_WEB_URL` | ○ | опционально |
 
-## Auth
+```bash
+bun run db:migrate && docker compose up --build -d
+```
 
-- `POST /api/auth/register` — `{ email, password, displayName? }`
-- `POST /api/auth/login` — `{ email, password }`
-- Все `/api/conversations/*` требуют `Authorization: Bearer <token>`
+---
 
-## WebSocket
+## API
 
-- `ws://localhost:3001/ws?token=JWT&conversationId=UUID`
-- Событие `messages.created` — realtime обновление чата
+| Endpoint | Описание |
+|----------|----------|
+| `POST /api/auth/register` | `{ email, password, displayName? }` |
+| `POST /api/auth/login` | `{ email, password }` → JWT |
+| `GET/POST /api/conversations` | CRUD (Bearer) |
+| `POST /api/conversations/:id/messages/stream` | SSE streaming |
+| `GET /api/llm/models` | список моделей |
+| `WS /ws?token=&conversationId=` | `messages.created` |
 
-## Что из инфраструктуры имеет смысл
+---
 
-| Технология | Hyphai | Зачем |
-|---|---|---|
-| **Redis** | ✅ | Pub/Sub для WebSocket между инстансами API |
-| **Prometheus + Grafana** | ✅ | Метрики API (`/metrics`), harness eval |
-| **RabbitMQ** | ❌ | Нужен для async jobs (email, LLM queue) — overkill для MVP |
-| **Kafka** | ❌ | Event streaming at scale — overkill для хакатона |
+## Hyphae network
 
-## Hyphae network (ветки и share)
+| Фича | Как |
+|------|-----|
+| **Ветка** | Кнопка на сообщении → новый чат с историей до точки |
+| **Share** | Read-only `/share/{slug}` без авторизации |
 
-- **Ветка** — кнопка на сообщении создаёт новый диалог с историей до этой точки (`parent_id`).
-- **Поделиться** — read-only ссылка `/share/{slug}` без авторизации.
+---
 
 ## License
 
-MIT
+MIT — см. `package.json`.
