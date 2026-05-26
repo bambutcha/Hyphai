@@ -58,3 +58,17 @@ TBD - created by archiving change add-universal-chat. Update Purpose after archi
 - **WHEN** id существует, но принадлежит другому пользователю
 - **THEN** API возвращает HTTP 404
 
+### Requirement: Parent conversation (волна C)
+Таблица conversations SHALL иметь nullable `parent_id` для ветвления.
+
+#### Scenario: Fork metadata
+- **WHEN** создана ветка от диалога A
+- **THEN** новый диалог имеет `parent_id = A.id`
+
+### Requirement: Share slug (волна C)
+Таблица conversations SHALL иметь nullable `share_slug` unique для публичного read-only доступа.
+
+#### Scenario: Enable share
+- **WHEN** владелец включает share
+- **THEN** генерируется уникальный slug
+

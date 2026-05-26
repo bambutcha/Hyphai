@@ -47,3 +47,10 @@ TBD - created by archiving change add-universal-chat. Update Purpose after archi
 - **WHEN** пользователь пишет на русском
 - **THEN** assistant отвечает на русском (через system prompt; качество зависит от модели)
 
+### Requirement: Stream endpoint отправки
+Система SHALL поддерживать `POST /conversations/:id/messages/stream` с SSE в дополнение к синхронному POST.
+
+#### Scenario: Совместимость истории
+- **WHEN** stream завершён событием `done`
+- **THEN** assistant message идентичен по формату синхронному POST и появляется в `GET /messages`
+
