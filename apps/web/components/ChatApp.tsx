@@ -17,8 +17,10 @@ import {
   getErrorMessage,
   isUnauthorizedError,
   type Conversation,
+  type LlmModelOption,
   type Message,
 } from '@/lib/api';
+import { DEFAULT_LLM_MODEL_ID, getStoredLlmModel, setStoredLlmModel } from '@/lib/llm-storage';
 import { connectConversationWs } from '@/lib/ws';
 
 type BannerAction = 'send' | 'create' | 'delete' | 'rename' | null;
@@ -38,6 +40,8 @@ export function ChatApp() {
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [bannerAction, setBannerAction] = useState<BannerAction>(null);
   const [wsStatus, setWsStatus] = useState<ConnectionStatus | null>(null);
+  const [llmModels, setLlmModels] = useState<LlmModelOption[]>([]);
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_LLM_MODEL_ID);
   const deleteTargetRef = useRef<string | null>(null);
   const renameTargetRef = useRef<{ id: string; title: string } | null>(null);
 
@@ -102,6 +106,23 @@ export function ChatApp() {
     if (!authed) return;
     loadConversations().catch(() => undefined);
   }, [authed, loadConversations]);
+
+  useEffect(() => {
+    if (!authed) return;
+    const stored = getStoredLlmModel();
+    api
+      .listLlmModels()
+      .then((data) => {
+        setLlmModels(data.models);
+        const ids = new Set(data.models.map((m) => m.id));
+        if (stored && ids.has(stored)) {
+          setSelectedModelId(stored);
+        } else if (ids.has(data.defaultModelId)) {
+          setSelectedModelId(data.defaultModelId);
+        }
+      })
+      .catch(() => undefined);
+  }, [authed]);
 
   useEffect(() => {
     if (!activeId || !authed) {
@@ -200,7 +221,7 @@ export function ChatApp() {
       setSending(true);
       setBannerError(null);
       setBannerAction(null);
-      await api.sendMessage(activeId, draft.trim());
+      await api.sendMessage(activeId, draft.trim(), selectedModelId);
       setDraft('');
       await loadMessages(activeId);
       await loadConversations();
@@ -329,6 +350,12 @@ export function ChatApp() {
                 loadError={messagesError}
                 onRetryLoad={() => loadMessages(activeId!).catch(() => undefined)}
                 connectionStatus={wsStatus}
+                llmModels={llmModels}
+                selectedModelId={selectedModelId}
+                onModelChange={(id) => {
+                  setSelectedModelId(id);
+                  setStoredLlmModel(id);
+                }}
                 onDraftChange={setDraft}
                 onSend={handleSend}
                 sending={sending}

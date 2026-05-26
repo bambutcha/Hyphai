@@ -43,6 +43,20 @@ bun run dev:web   # :3000
 
 Postgres в dev-compose на порту **5433** (если только postgres/redis подняты — см. `.env.example`).
 
+## LLM (OpenRouter)
+
+1. Зарегистрируйтесь на [openrouter.ai](https://openrouter.ai/) и создайте API key.
+2. В корневой `.env` (скопируйте из `.env.example`):
+
+```bash
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=openai/gpt-oss-120b:free   # default; в UI: GPT-OSS, Gemma 4, DeepSeek, Nemotron, Авто
+```
+
+Free tier имеет лимиты (~50 req/день без credits). Без ключа API вернёт `503` с `LLM not configured`.
+
+При **429** у выбранной модели (Gemma, DeepSeek, Qwen, Llama) API автоматически пробует запасные: `gpt-oss-120b` → `liquid/lfm-2.5-instruct`.
+
 ## Auth
 
 - `POST /api/auth/register` — `{ email, password, displayName? }`

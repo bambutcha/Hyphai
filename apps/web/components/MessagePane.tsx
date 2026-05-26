@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef } from 'react';
-import type { Message } from '@/lib/api';
+import { ModelSelector } from '@/components/ModelSelector';
+import type { LlmModelOption, Message } from '@/lib/api';
 import { ConnectionBadge, type ConnectionStatus } from '@/components/ui/ConnectionBadge';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { GlowButton } from '@/components/visual/GlowButton';
@@ -17,6 +18,9 @@ interface MessagePaneProps {
   loadError?: string | null;
   onRetryLoad?: () => void;
   connectionStatus?: ConnectionStatus | null;
+  llmModels?: LlmModelOption[];
+  selectedModelId?: string;
+  onModelChange?: (modelId: string) => void;
   onDraftChange: (value: string) => void;
   onSend: () => void;
   sending: boolean;
@@ -30,6 +34,9 @@ export function MessagePane({
   loadError = null,
   onRetryLoad,
   connectionStatus = null,
+  llmModels = [],
+  selectedModelId = '',
+  onModelChange,
   onDraftChange,
   onSend,
   sending,
@@ -49,11 +56,21 @@ export function MessagePane({
 
   return (
     <section className="chat-main-area relative flex h-full min-h-0 flex-1 flex-col">
-      <header className="glass-panel z-10 mx-4 mt-4 flex items-center justify-between gap-3 rounded-xl border-0 px-6 py-4 md:mx-6">
-        <h2 className="font-display truncate text-lg font-semibold text-zinc-100">
+      <header className="glass-panel z-10 mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border-0 px-6 py-4 md:mx-6">
+        <h2 className="font-display min-w-0 flex-1 truncate text-lg font-semibold text-zinc-100">
           {conversationTitle}
         </h2>
-        {connectionStatus && <ConnectionBadge status={connectionStatus} />}
+        <div className="flex items-center gap-3">
+          {llmModels.length > 0 && selectedModelId && onModelChange && (
+            <ModelSelector
+              models={llmModels}
+              value={selectedModelId}
+              disabled={sending}
+              onChange={onModelChange}
+            />
+          )}
+          {connectionStatus && <ConnectionBadge status={connectionStatus} />}
+        </div>
       </header>
 
       <div className="scroll-fade-y flex-1 overflow-y-auto px-4 py-6 md:px-8">

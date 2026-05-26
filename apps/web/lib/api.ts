@@ -31,6 +31,17 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface LlmModelOption {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export interface LlmModelsResponse {
+  models: LlmModelOption[];
+  defaultModelId: string;
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly userMessage: string;
@@ -77,10 +88,6 @@ export function parseApiError(status: number, body: string): ApiError {
     }
     return new ApiError(status, 'Session expired. Please sign in again.', body);
   }
-  if (status >= 500) {
-    return new ApiError(status, 'Server error. Try again in a moment.', body);
-  }
-
   try {
     const parsed = JSON.parse(body) as { error?: string };
     if (parsed.error) {
@@ -88,6 +95,10 @@ export function parseApiError(status: number, body: string): ApiError {
     }
   } catch {
     /* not JSON */
+  }
+
+  if (status >= 500) {
+    return new ApiError(status, 'Server error. Try again in a moment.', body);
   }
 
   const trimmed = body.trim().slice(0, 120);
@@ -159,12 +170,14 @@ export const api = {
   listMessages: (conversationId: string) =>
     request<Message[]>(`/api/conversations/${conversationId}/messages`),
 
-  sendMessage: (conversationId: string, content: string) =>
+  listLlmModels: () => request<LlmModelsResponse>('/api/llm/models'),
+
+  sendMessage: (conversationId: string, content: string, model?: string) =>
     request<{ user: Message; assistant: Message }>(
       `/api/conversations/${conversationId}/messages`,
       {
         method: 'POST',
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, ...(model ? { model } : {}) }),
       },
     ),
 };

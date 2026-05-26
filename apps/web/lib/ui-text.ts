@@ -22,6 +22,7 @@ export const uiText = {
     send: 'Отправить',
     loadingMessages: 'Загрузка сообщений…',
     retry: 'Повторить',
+    modelLabel: 'Модель',
   },
   meta: {
     title: 'Hyphai — универсальный чат',

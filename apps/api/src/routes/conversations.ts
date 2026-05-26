@@ -1,6 +1,10 @@
 import { Hono } from 'hono';
 import type { Kysely } from 'kysely';
 import type { DB } from '../db/schema.js';
+import { buildOpenRouterMessages } from '../llm/history.js';
+import { isLlmError } from '../llm/errors.js';
+import { completeChat } from '../llm/openrouter.js';
+import { resolveModelId } from '../llm/models.js';
 import { publishConversationEvent } from '../lib/redis.js';
 import type { AuthEnv } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -116,9 +120,10 @@ export function createConversationRoutes(db: Kysely<DB>) {
   routes.post('/:id/messages', async (c) => {
     const userId = c.get('userId');
     const id = c.req.param('id');
-    const body = await c.req.json<{ content?: string }>();
+    const body = await c.req.json<{ content?: string; model?: string }>();
 
     const content = body.content?.trim();
+    const modelId = resolveModelId(body.model);
     if (!content) return c.json({ error: 'Content is required' }, 400);
 
     const conversation = await db
@@ -140,12 +145,30 @@ export function createConversationRoutes(db: Kysely<DB>) {
       .returningAll()
       .executeTakeFirstOrThrow();
 
+    const historyRows = await db
+      .selectFrom('messages')
+      .select(['role', 'content'])
+      .where('conversation_id', '=', id)
+      .orderBy('created_at', 'asc')
+      .execute();
+
+    let assistantContent: string;
+    try {
+      assistantContent = await completeChat(buildOpenRouterMessages(historyRows), modelId);
+    } catch (err) {
+      if (isLlmError(err)) {
+        return c.json({ error: err.message }, err.status);
+      }
+      console.error('[messages] LLM error', err);
+      return c.json({ error: 'LLM unavailable' }, 502);
+    }
+
     const assistantMessage = await db
       .insertInto('messages')
       .values({
         conversation_id: id,
         role: 'assistant',
-        content: `Hyphai получил: «${content}» — подключите LLM harness для настоящих ответов.`,
+        content: assistantContent,
       })
       .returningAll()
       .executeTakeFirstOrThrow();

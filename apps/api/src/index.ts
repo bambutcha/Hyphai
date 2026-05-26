@@ -15,6 +15,7 @@ import {
 } from './middleware/metrics.js';
 import { createAuthRoutes } from './routes/auth.js';
 import { createConversationRoutes } from './routes/conversations.js';
+import { createLlmRoutes } from './routes/llm.js';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
@@ -42,6 +43,7 @@ app.get('/metrics', (c) => c.text(renderMetrics(), 200, {
 
 app.route('/api/auth', createAuthRoutes(db));
 app.route('/api/conversations', createConversationRoutes(db));
+app.route('/api/llm', createLlmRoutes());
 
 app.get(
   '/ws',
