@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AuthScreen } from '@/components/AuthScreen';
 import { ChatEmptyState } from '@/components/ChatEmptyState';
 import { ConversationSidebar } from '@/components/ConversationSidebar';
 import { MessagePane } from '@/components/MessagePane';
@@ -13,7 +12,6 @@ import { pageTransition } from '@/lib/motion';
 import {
   api,
   clearAuthToken,
-  getAuthToken,
   getErrorMessage,
   isUnauthorizedError,
   type Conversation,
@@ -21,18 +19,20 @@ import {
   type Message,
 } from '@/lib/api';
 import { DEFAULT_LLM_MODEL_ID, getStoredLlmModel, setStoredLlmModel } from '@/lib/llm-storage';
+import { sendMessageStream } from '@/lib/message-stream';
+import { uiText } from '@/lib/ui-text';
 import { connectConversationWs } from '@/lib/ws';
 
 type BannerAction = 'send' | 'create' | 'delete' | 'rename' | null;
 
 export function ChatApp() {
-  const [authed, setAuthed] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [streamingContent, setStreamingContent] = useState<string | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [conversationsError, setConversationsError] = useState<string | null>(null);
@@ -44,25 +44,16 @@ export function ChatApp() {
   const [selectedModelId, setSelectedModelId] = useState(DEFAULT_LLM_MODEL_ID);
   const deleteTargetRef = useRef<string | null>(null);
   const renameTargetRef = useRef<{ id: string; title: string } | null>(null);
+  const lastSendContentRef = useRef('');
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
 
-  useEffect(() => {
-    setAuthed(!!getAuthToken());
-  }, []);
+  const closeMobileSidebar = useCallback(() => setMobileSidebarOpen(false), []);
 
   const handleUnauthorized = useCallback((err: unknown): boolean => {
     if (!isUnauthorizedError(err)) return false;
     clearAuthToken();
-    setAuthError(getErrorMessage(err));
-    setAuthed(false);
-    setActiveId(null);
-    setConversations([]);
-    setMessages([]);
-    setBannerError(null);
-    setConversationsError(null);
-    setMessagesError(null);
-    setWsStatus(null);
+    window.location.reload();
     return true;
   }, []);
 
@@ -103,12 +94,10 @@ export function ChatApp() {
   );
 
   useEffect(() => {
-    if (!authed) return;
     loadConversations().catch(() => undefined);
-  }, [authed, loadConversations]);
+  }, [loadConversations]);
 
   useEffect(() => {
-    if (!authed) return;
     const stored = getStoredLlmModel();
     api
       .listLlmModels()
@@ -122,20 +111,20 @@ export function ChatApp() {
         }
       })
       .catch(() => undefined);
-  }, [authed]);
+  }, []);
 
   useEffect(() => {
-    if (!activeId || !authed) {
+    if (!activeId) {
       setMessages([]);
       setMessagesError(null);
       setWsStatus(null);
       return;
     }
     loadMessages(activeId).catch(() => undefined);
-  }, [activeId, authed, loadMessages]);
+  }, [activeId, loadMessages]);
 
   useEffect(() => {
-    if (!activeId || !authed) return;
+    if (!activeId) return;
 
     return connectConversationWs(
       activeId,
@@ -144,6 +133,7 @@ export function ChatApp() {
           setMessages((prev) => {
             const ids = new Set(prev.map((m) => m.id));
             const added = event.messages.filter((m) => !ids.has(m.id));
+            if (added.length === 0) return prev;
             return [...prev, ...added];
           });
           loadConversations().catch(() => undefined);
@@ -151,19 +141,7 @@ export function ChatApp() {
       },
       { onConnectionChange: setWsStatus },
     );
-  }, [activeId, authed, loadConversations]);
-
-  if (!authed) {
-    return (
-      <AuthScreen
-        initialError={authError}
-        onAuthenticated={() => {
-          setAuthError(null);
-          setAuthed(true);
-        }}
-      />
-    );
-  }
+  }, [activeId, loadConversations]);
 
   const handleCreate = async () => {
     try {
@@ -174,6 +152,7 @@ export function ChatApp() {
       setActiveId(created.id);
       setMessages([]);
       setDraft('');
+      closeMobileSidebar();
     } catch (err) {
       if (handleUnauthorized(err)) return;
       setBannerError(getErrorMessage(err));
@@ -216,26 +195,64 @@ export function ChatApp() {
   };
 
   const handleSend = async () => {
-    if (!activeId || !draft.trim()) return;
+    if (!activeId || !draft.trim() || sending) return;
+
+    const content = draft.trim();
+    lastSendContentRef.current = content;
+    setSending(true);
+    setStreamingContent(null);
+    setBannerError(null);
+    setBannerAction(null);
+    setDraft('');
+
     try {
-      setSending(true);
-      setBannerError(null);
-      setBannerAction(null);
-      await api.sendMessage(activeId, draft.trim(), selectedModelId);
-      setDraft('');
-      await loadMessages(activeId);
-      await loadConversations();
+      await sendMessageStream(activeId, content, selectedModelId, {
+        onUserMessage: (message) => {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === message.id)) return prev;
+            return [...prev, message];
+          });
+        },
+        onChunk: (delta) => {
+          setStreamingContent((prev) => (prev ?? '') + delta);
+        },
+        onDone: (payload) => {
+          setStreamingContent(null);
+          setMessages((prev) => {
+            const ids = new Set(prev.map((m) => m.id));
+            if (ids.has(payload.assistant.id)) {
+              return prev.map((m) =>
+                m.id === payload.assistant.id ? payload.assistant : m,
+              );
+            }
+            return [...prev, payload.assistant];
+          });
+          void loadConversations();
+        },
+        onError: (error) => {
+          setStreamingContent(null);
+          setDraft(content);
+          setBannerError(error);
+          setBannerAction('send');
+        },
+      });
     } catch (err) {
       if (handleUnauthorized(err)) return;
+      setStreamingContent(null);
+      setDraft(content);
       setBannerError(getErrorMessage(err));
       setBannerAction('send');
     } finally {
       setSending(false);
+      setStreamingContent(null);
     }
   };
 
   const handleBannerRetry = () => {
     if (bannerAction === 'send') {
+      if (!draft.trim() && lastSendContentRef.current) {
+        setDraft(lastSendContentRef.current);
+      }
       void handleSend();
       return;
     }
@@ -255,14 +272,7 @@ export function ChatApp() {
 
   const handleLogout = () => {
     clearAuthToken();
-    setAuthed(false);
-    setActiveId(null);
-    setConversations([]);
-    setMessages([]);
-    setBannerError(null);
-    setConversationsError(null);
-    setMessagesError(null);
-    setWsStatus(null);
+    window.location.reload();
   };
 
   const showWelcome =
@@ -282,22 +292,62 @@ export function ChatApp() {
         ? 'chat'
         : null;
 
+  const openMobileMenu = () => setMobileSidebarOpen(true);
+
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden md:flex-row">
       <HyphaeBackground />
-      <ConversationSidebar
-        conversations={conversations}
-        activeId={activeId}
-        loading={loadingConversations}
-        loadError={conversationsError}
-        onRetryLoad={() => loadConversations().catch(() => undefined)}
-        onSelect={setActiveId}
-        onCreate={handleCreate}
-        onDelete={handleDelete}
-        onRename={handleRename}
-        onLogout={handleLogout}
-      />
+
+      {mobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label={uiText.shell.closeMenu}
+          className="fixed inset-0 z-30 bg-black/60 md:hidden"
+          onClick={closeMobileSidebar}
+        />
+      )}
+
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] transform transition-transform duration-300 ease-out md:relative md:z-20 md:w-72 md:max-w-none md:translate-x-0 lg:w-80 ${
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        <ConversationSidebar
+          conversations={conversations}
+          activeId={activeId}
+          loading={loadingConversations}
+          loadError={conversationsError}
+          onRetryLoad={() => loadConversations().catch(() => undefined)}
+          onSelect={(id) => {
+            setActiveId(id);
+            closeMobileSidebar();
+          }}
+          onCreate={handleCreate}
+          onDelete={handleDelete}
+          onRename={handleRename}
+          onLogout={handleLogout}
+        />
+      </div>
+
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        {!showChat && (
+          <button
+            type="button"
+            aria-label={uiText.shell.openMenu}
+            onClick={openMobileMenu}
+            className="hyphai-focus hyphai-interactive fixed top-3 left-3 z-50 rounded-lg glass-panel p-2 text-zinc-300 md:hidden"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path
+                d="M4 7h16M4 12h16M4 17h16"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
+
         {bannerError && (
           <ErrorBanner
             message={bannerError}
@@ -359,6 +409,8 @@ export function ChatApp() {
                 onDraftChange={setDraft}
                 onSend={handleSend}
                 sending={sending}
+                streamingContent={streamingContent}
+                onOpenMenu={openMobileMenu}
               />
             </motion.div>
           )}

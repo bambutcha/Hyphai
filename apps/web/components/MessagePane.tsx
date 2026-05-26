@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef } from 'react';
+import { MessageMarkdown } from '@/components/MessageMarkdown';
 import { ModelSelector } from '@/components/ModelSelector';
 import type { LlmModelOption, Message } from '@/lib/api';
 import { ConnectionBadge, type ConnectionStatus } from '@/components/ui/ConnectionBadge';
@@ -24,6 +25,8 @@ interface MessagePaneProps {
   onDraftChange: (value: string) => void;
   onSend: () => void;
   sending: boolean;
+  streamingContent?: string | null;
+  onOpenMenu?: () => void;
 }
 
 export function MessagePane({
@@ -40,13 +43,15 @@ export function MessagePane({
   onDraftChange,
   onSend,
   sending,
+  streamingContent = null,
+  onOpenMenu,
 }: MessagePaneProps) {
   const reduced = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
-  }, [messages, reduced]);
+  }, [messages, streamingContent, reduced]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,10 +61,29 @@ export function MessagePane({
 
   return (
     <section className="chat-main-area relative flex h-full min-h-0 flex-1 flex-col">
-      <header className="glass-panel z-10 mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border-0 px-6 py-4 md:mx-6">
-        <h2 className="font-display min-w-0 flex-1 truncate text-lg font-semibold text-zinc-100">
-          {conversationTitle}
-        </h2>
+      <header className="glass-panel z-10 mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border-0 px-4 py-4 md:mx-6 md:px-6">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {onOpenMenu && (
+            <button
+              type="button"
+              onClick={onOpenMenu}
+              aria-label={uiText.shell.openMenu}
+              className="hyphai-focus hyphai-interactive shrink-0 rounded-lg p-2 text-zinc-300 hover:bg-zinc-800/80 md:hidden"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M4 7h16M4 12h16M4 17h16"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          )}
+          <h2 className="font-display min-w-0 flex-1 truncate text-lg font-semibold text-zinc-100">
+            {conversationTitle}
+          </h2>
+        </div>
         <div className="flex items-center gap-3">
           {llmModels.length > 0 && selectedModelId && onModelChange && (
             <ModelSelector
@@ -111,12 +135,28 @@ export function MessagePane({
                         : 'glass-panel text-zinc-100 shadow-lg shadow-black/20'
                     }`}
                   >
-                    {message.content}
+                    {message.role === 'assistant' ? (
+                      <MessageMarkdown content={message.content} />
+                    ) : (
+                      message.content
+                    )}
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
-            {sending && (
+            {streamingContent !== null && (
+              <motion.div
+                initial={reduced ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex justify-start"
+                aria-live="polite"
+              >
+                <div className="glass-panel max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed text-zinc-100 shadow-lg shadow-black/20">
+                  <MessageMarkdown content={streamingContent} />
+                </div>
+              </motion.div>
+            )}
+            {sending && streamingContent === null && (
               <motion.div
                 initial={reduced ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}

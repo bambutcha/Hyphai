@@ -139,6 +139,54 @@ button:not(:disabled),
   animation: glow-pulse 2s ease-in-out infinite;
 }
 
+.message-markdown {
+  overflow-wrap: anywhere;
+}
+
+.message-markdown p {
+  margin: 0.35em 0;
+}
+
+.message-markdown p:first-child {
+  margin-top: 0;
+}
+
+.message-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.message-markdown pre {
+  margin: 0.5em 0;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: rgb(9 9 11 / 0.85);
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.message-markdown code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875em;
+}
+
+.message-markdown :not(pre) > code {
+  border-radius: 0.25rem;
+  background: rgb(39 39 42 / 0.8);
+  padding: 0.1em 0.35em;
+}
+
+.message-markdown ul,
+.message-markdown ol {
+  margin: 0.35em 0;
+  padding-left: 1.25rem;
+}
+
+.message-markdown a {
+  color: var(--hyphai-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-hyphae-float,
   .animate-glow-pulse {
