@@ -111,22 +111,34 @@ async function requestChatOnce(
   return content;
 }
 
+export interface ChatCompletionResult {
+  text: string;
+  modelUsed: string;
+  requestedModel: string;
+  usedFallback: boolean;
+}
+
 export async function completeChat(
   messages: OpenRouterChatMessage[],
   modelId?: string,
-): Promise<string> {
-  const primary = modelId?.trim() || getDefaultModelId();
-  const chain = buildModelAttemptChain(primary);
+): Promise<ChatCompletionResult> {
+  const requestedModel = modelId?.trim() || getDefaultModelId();
+  const chain = buildModelAttemptChain(requestedModel);
 
   let lastError: LlmError | null = null;
 
   for (const model of chain) {
     try {
       const text = await requestChatOnce(messages, model);
-      if (model !== primary) {
-        console.info('[openrouter] used fallback', primary, '->', model);
+      if (model !== requestedModel) {
+        console.info('[openrouter] used fallback', requestedModel, '->', model);
       }
-      return text;
+      return {
+        text,
+        modelUsed: model,
+        requestedModel,
+        usedFallback: model !== requestedModel,
+      };
     } catch (err) {
       if (!isLlmError(err)) throw err;
       lastError = err;

@@ -56,4 +56,31 @@ export const uiText = {
     openMenu: 'Открыть меню',
     closeMenu: 'Закрыть меню',
   },
+  toast: {
+    chatCreated: 'Чат создан',
+    chatDeleted: 'Диалог удалён',
+    chatRenamed: 'Название сохранено',
+    createFailed: 'Не удалось создать чат',
+    deleteFailed: 'Не удалось удалить диалог',
+    renameFailed: 'Не удалось переименовать',
+  },
+  model: {
+    badgeLabel: (name: string) => `Модель: ${name}`,
+    fallbackBadge: (requested: string, used: string) =>
+      `Запрошено: ${requested} · ответил: ${used}`,
+  },
+  share: {
+    title: 'Поделиться диалогом',
+    enable: 'Включить ссылку',
+    disable: 'Отключить ссылку',
+    copy: 'Копировать ссылку',
+    copied: 'Ссылка скопирована',
+    failed: 'Не удалось настроить доступ',
+    readOnly: 'Только просмотр',
+  },
+  fork: {
+    action: 'Ветка',
+    success: 'Ветка создана',
+    failed: 'Не удалось создать ветку',
+  },
 } as const;

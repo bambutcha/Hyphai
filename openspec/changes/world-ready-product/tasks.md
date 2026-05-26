@@ -39,25 +39,25 @@
 
 ### B1 Product feedback
 
-- [ ] B1.1 `ToastProvider` + hook
-- [ ] B1.2 Toasts: rename, delete, create chat success/error
-- [ ] B1.3 Skeleton components для sidebar + messages
+- [x] B1.1 `ToastProvider` + hook
+- [x] B1.2 Toasts: rename, delete, create chat success/error
+- [x] B1.3 Skeleton components для sidebar + messages
 
 ### B2 LLM transparency
 
-- [ ] B2.1 API: `modelUsed`, `requestedModel`, `usedFallback` в done/sync response
-- [ ] B2.2 `ModelBadge.tsx` в MessagePane header или под bubble
+- [x] B2.1 API: `modelUsed`, `requestedModel`, `usedFallback` в done/sync response
+- [x] B2.2 `ModelBadge.tsx` в MessagePane header или под bubble
 
 ### B3 CI + Deploy
 
-- [ ] B3.1 `.github/workflows/ci.yml`
-- [ ] B3.2 README «Deploy in 5 min» + prod env table
-- [ ] B3.3 Документация stable/paid OPENROUTER_MODEL для public instance
+- [x] B3.1 `.github/workflows/ci.yml`
+- [x] B3.2 README «Deploy in 5 min» + prod env table
+- [x] B3.3 Документация stable/paid OPENROUTER_MODEL для public instance
 
 ### B4 Verification B
 
-- [ ] B4.1 CI green on PR
-- [ ] B4.2 Fallback badge visible when Gemma → GPT-OSS
+- [x] B4.1 CI green on PR
+- [x] B4.2 Fallback badge visible when Gemma → GPT-OSS
 
 ---
 
@@ -65,17 +65,17 @@
 
 ### C1 Schema
 
-- [ ] C1.1 Migration: `parent_id`, `share_slug` on conversations
-- [ ] C1.2 API fork conversation from message
-- [ ] C1.3 API enable/disable share + public GET share
+- [x] C1.1 Migration: `parent_id`, `share_slug` on conversations
+- [x] C1.2 API fork conversation from message
+- [x] C1.3 API enable/disable share + public GET share
 
 ### C2 UI network
 
-- [ ] C2.1 «Ветка» action на message bubble
-- [ ] C2.2 Share dialog + public share page (read-only)
-- [ ] C2.3 `HyphaeGraphEmpty.tsx` на welcome empty state
+- [x] C2.1 «Ветка» action на message bubble
+- [x] C2.2 Share dialog + public share page (read-only)
+- [x] C2.3 `HyphaeGraphEmpty.tsx` на welcome empty state
 
 ### C3 Verification C
 
-- [ ] C3.1 Fork → new chat with parent link
-- [ ] C3.2 Share URL opens without auth
+- [x] C3.1 Fork → new chat with parent link
+- [x] C3.2 Share URL opens without auth

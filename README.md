@@ -55,7 +55,48 @@ OPENROUTER_MODEL=openai/gpt-oss-120b:free   # default; в UI: GPT-OSS, Gemma 4, 
 
 Free tier имеет лимиты (~50 req/день без credits). Без ключа API вернёт `503` с `LLM not configured`.
 
-При **429** у выбранной модели (Gemma, DeepSeek, Qwen, Llama) API автоматически пробует запасные: `gpt-oss-120b` → `liquid/lfm-2.5-instruct`.
+При **429** у выбранной модели (Gemma, DeepSeek, Qwen, Llama) API автоматически пробует запасные: `gpt-oss-120b` → `liquid/lfm-2.5-instruct`. В UI отображается бейдж fallback (`Запрошено: … · ответил: …`).
+
+### Production / публичный инстанс
+
+Для стабильного публичного деплоя **не полагайтесь только на `openrouter/free`** — лимиты free tier часто дают 429.
+
+| Режим | `OPENROUTER_MODEL` | Комментарий |
+|---|---|---|
+| Dev / демо | `openai/gpt-oss-120b:free` | Подходит для локальной разработки |
+| Стабильнее free | `openai/gpt-oss-120b:free` + credits на [openrouter.ai](https://openrouter.ai/credits) | Меньше 429 на популярных моделях |
+| Production | Платная или лимитированная модель, напр. `anthropic/claude-sonnet-4` | Задайте в `.env` и при необходимости скройте free-модели в UI |
+
+Пользовательский выбор модели в UI по-прежнему может отличаться от `OPENROUTER_MODEL` (дефолт сервера).
+
+## Deploy in 5 min
+
+1. **Fork / clone** репозиторий, скопируйте `.env.example` → `.env`.
+2. Задайте секреты:
+
+| Переменная | Обязательно | Описание |
+|---|---|---|
+| `DATABASE_URL` | ✅ | Postgres (managed или `docker compose`) |
+| `REDIS_URL` | ✅ | Redis для WebSocket pub/sub |
+| `JWT_SECRET` | ✅ | Случайная строка ≥ 32 символов |
+| `OPENROUTER_API_KEY` | ✅ | Ключ OpenRouter |
+| `OPENROUTER_MODEL` | рекомендуется | Дефолтная модель (см. таблицу выше) |
+| `NEXT_PUBLIC_API_URL` | ✅ | Публичный URL API, напр. `https://api.example.com` |
+| `NEXT_PUBLIC_WS_URL` | ✅ | `wss://api.example.com` |
+| `PUBLIC_WEB_URL` | для share | Публичный URL web, напр. `https://app.example.com` |
+| `CORS_ORIGINS` | ✅ | Origin фронтенда через запятую |
+
+3. **Миграции:** `bun run db:migrate` (или через entrypoint контейнера API).
+4. **Запуск:** `docker compose up --build -d` или два сервиса (web + api) за reverse proxy.
+5. Откройте web URL, зарегистрируйтесь, создайте чат.
+
+| Сервис | Типичный URL |
+|---|---|
+| Web | `https://app.example.com` |
+| API | `https://api.example.com` |
+| Health | `GET /health` |
+
+CI: `.github/workflows/ci.yml` — `bun install`, typecheck API, `next build`.
 
 ## Auth
 
@@ -77,17 +118,10 @@ Free tier имеет лимиты (~50 req/день без credits). Без кл
 | **RabbitMQ** | ❌ | Нужен для async jobs (email, LLM queue) — overkill для MVP |
 | **Kafka** | ❌ | Event streaming at scale — overkill для хакатона |
 
-## UI roadmap (SaaS polish backlog)
+## Hyphae network (ветки и share)
 
-Следующие улучшения вне текущего MVP — отдельные OpenSpec changes:
-
-| Область | Цель |
-|---|---|
-| Toasts | success/error feedback без только ErrorBanner |
-| Mobile drawer | off-canvas сайдбар на `<768px` |
-| Skeleton loaders | shimmer вместо только текстового LoadingState |
-| Command palette | ⌘K быстрые действия |
-| Settings | профиль, тема |
+- **Ветка** — кнопка на сообщении создаёт новый диалог с историей до этой точки (`parent_id`).
+- **Поделиться** — read-only ссылка `/share/{slug}` без авторизации.
 
 ## License
 

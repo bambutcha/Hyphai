@@ -2,10 +2,13 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ModelMeta } from '@/components/ModelBadge';
 import { ChatEmptyState } from '@/components/ChatEmptyState';
 import { ConversationSidebar } from '@/components/ConversationSidebar';
 import { MessagePane } from '@/components/MessagePane';
+import { ShareDialog } from '@/components/ShareDialog';
 import { ErrorBanner } from '@/components/ui/ErrorBanner';
+import { useToast } from '@/components/ui/ToastProvider';
 import type { ConnectionStatus } from '@/components/ui/ConnectionBadge';
 import { HyphaeBackground } from '@/components/visual/HyphaeBackground';
 import { pageTransition } from '@/lib/motion';
@@ -26,6 +29,7 @@ import { connectConversationWs } from '@/lib/ws';
 type BannerAction = 'send' | 'create' | 'delete' | 'rename' | null;
 
 export function ChatApp() {
+  const toast = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -42,6 +46,8 @@ export function ChatApp() {
   const [wsStatus, setWsStatus] = useState<ConnectionStatus | null>(null);
   const [llmModels, setLlmModels] = useState<LlmModelOption[]>([]);
   const [selectedModelId, setSelectedModelId] = useState(DEFAULT_LLM_MODEL_ID);
+  const [lastModelMeta, setLastModelMeta] = useState<ModelMeta | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const deleteTargetRef = useRef<string | null>(null);
   const renameTargetRef = useRef<{ id: string; title: string } | null>(null);
   const lastSendContentRef = useRef('');
@@ -118,8 +124,10 @@ export function ChatApp() {
       setMessages([]);
       setMessagesError(null);
       setWsStatus(null);
+      setLastModelMeta(null);
       return;
     }
+    setLastModelMeta(null);
     loadMessages(activeId).catch(() => undefined);
   }, [activeId, loadMessages]);
 
@@ -153,8 +161,10 @@ export function ChatApp() {
       setMessages([]);
       setDraft('');
       closeMobileSidebar();
+      toast.success(uiText.toast.chatCreated);
     } catch (err) {
       if (handleUnauthorized(err)) return;
+      toast.error(uiText.toast.createFailed);
       setBannerError(getErrorMessage(err));
       setBannerAction('create');
     }
@@ -172,8 +182,10 @@ export function ChatApp() {
         setMessages([]);
         setDraft('');
       }
+      toast.success(uiText.toast.chatDeleted);
     } catch (err) {
       if (handleUnauthorized(err)) return;
+      toast.error(uiText.toast.deleteFailed);
       setBannerError(getErrorMessage(err));
       setBannerAction('delete');
     }
@@ -186,11 +198,29 @@ export function ChatApp() {
       renameTargetRef.current = { id, title };
       const updated = await api.updateConversation(id, title);
       setConversations((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      toast.success(uiText.toast.chatRenamed);
     } catch (err) {
       if (handleUnauthorized(err)) return;
+      toast.error(uiText.toast.renameFailed);
       setBannerError(getErrorMessage(err));
       setBannerAction('rename');
       throw err;
+    }
+  };
+
+  const handleFork = async (messageId: string) => {
+    if (!activeId) return;
+    try {
+      const forked = await api.forkConversation(activeId, messageId);
+      await loadConversations();
+      setActiveId(forked.id);
+      setMessages([]);
+      setDraft('');
+      closeMobileSidebar();
+      toast.success(uiText.fork.success);
+    } catch (err) {
+      if (handleUnauthorized(err)) return;
+      toast.error(uiText.fork.failed);
     }
   };
 
@@ -218,6 +248,11 @@ export function ChatApp() {
         },
         onDone: (payload) => {
           setStreamingContent(null);
+          setLastModelMeta({
+            modelUsed: payload.modelUsed,
+            requestedModel: payload.requestedModel,
+            usedFallback: payload.usedFallback,
+          });
           setMessages((prev) => {
             const ids = new Set(prev.map((m) => m.id));
             if (ids.has(payload.assistant.id)) {
@@ -411,11 +446,24 @@ export function ChatApp() {
                 sending={sending}
                 streamingContent={streamingContent}
                 onOpenMenu={openMobileMenu}
+                lastModelMeta={lastModelMeta}
+                onForkMessage={(messageId) => void handleFork(messageId)}
+                onShare={() => setShareOpen(true)}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {activeId && (
+        <ShareDialog
+          conversationId={activeId}
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          onError={(message) => toast.error(message)}
+          onCopied={() => toast.success(uiText.share.copied)}
+        />
+      )}
     </div>
   );
 }

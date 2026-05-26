@@ -11,6 +11,16 @@ import { publishConversationEvent } from '../lib/redis.js';
 import type { AuthEnv } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 
+function generateShareSlug(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(9));
+  return `s_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+}
+
+function publicShareUrl(slug: string): string {
+  const base = process.env.PUBLIC_WEB_URL?.trim() || process.env.OPENROUTER_APP_URL?.trim() || 'http://localhost:3000';
+  return `${base.replace(/\/$/, '')}/share/${slug}`;
+}
+
 export function createConversationRoutes(db: Kysely<DB>) {
   const routes = new Hono<AuthEnv>();
 
@@ -30,12 +40,20 @@ export function createConversationRoutes(db: Kysely<DB>) {
 
   routes.post('/', async (c) => {
     const userId = c.get('userId');
-    const body = await c.req.json<{ title?: string }>().catch(() => ({}));
+    const body = (await c.req.json<{ title?: string }>().catch(() => ({}))) as {
+      title?: string;
+    };
     const title = body.title?.trim() || 'Новый диалог';
 
     const row = await db
       .insertInto('conversations')
-      .values({ title, user_id: userId })
+      .values({
+        title,
+        user_id: userId,
+        parent_id: null,
+        fork_from_message_id: null,
+        share_slug: null,
+      })
       .returningAll()
       .executeTakeFirstOrThrow();
 
@@ -60,7 +78,9 @@ export function createConversationRoutes(db: Kysely<DB>) {
   routes.patch('/:id', async (c) => {
     const userId = c.get('userId');
     const id = c.req.param('id');
-    const body = await c.req.json<{ title?: string }>().catch(() => ({}));
+    const body = (await c.req.json<{ title?: string }>().catch(() => ({}))) as {
+      title?: string;
+    };
     const title = body.title?.trim();
 
     if (!title || title.length > 120) {
@@ -93,6 +113,113 @@ export function createConversationRoutes(db: Kysely<DB>) {
       return c.json({ error: 'Not found' }, 404);
     }
 
+    return c.body(null, 204);
+  });
+
+  routes.post('/:id/fork', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+    const body = await c.req.json<{ messageId?: string }>();
+    const messageId = body.messageId?.trim();
+    if (!messageId) return c.json({ error: 'messageId is required' }, 400);
+
+    const source = await db
+      .selectFrom('conversations')
+      .selectAll()
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+
+    if (!source) return c.json({ error: 'Not found' }, 404);
+
+    const anchor = await db
+      .selectFrom('messages')
+      .selectAll()
+      .where('id', '=', messageId)
+      .where('conversation_id', '=', id)
+      .executeTakeFirst();
+
+    if (!anchor) return c.json({ error: 'Message not found' }, 404);
+
+    const history = await db
+      .selectFrom('messages')
+      .selectAll()
+      .where('conversation_id', '=', id)
+      .where('created_at', '<=', anchor.created_at)
+      .orderBy('created_at', 'asc')
+      .execute();
+
+    const branchTitle = `Ветка: ${source.title}`.slice(0, 120);
+
+    const forked = await db
+      .insertInto('conversations')
+      .values({
+        title: branchTitle,
+        user_id: userId,
+        parent_id: id,
+        fork_from_message_id: messageId,
+        share_slug: null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    if (history.length > 0) {
+      await db
+        .insertInto('messages')
+        .values(
+          history.map((m) => ({
+            conversation_id: forked.id,
+            role: m.role,
+            content: m.content,
+          })),
+        )
+        .execute();
+    }
+
+    return c.json(forked, 201);
+  });
+
+  routes.post('/:id/share', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+
+    const existing = await db
+      .selectFrom('conversations')
+      .selectAll()
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+
+    if (!existing) return c.json({ error: 'Not found' }, 404);
+
+    const shareSlug = existing.share_slug ?? generateShareSlug();
+
+    const updated = await db
+      .updateTable('conversations')
+      .set({ share_slug: shareSlug, updated_at: new Date() })
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    return c.json({
+      shareSlug: updated.share_slug,
+      shareUrl: publicShareUrl(updated.share_slug!),
+    });
+  });
+
+  routes.delete('/:id/share', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+
+    const updated = await db
+      .updateTable('conversations')
+      .set({ share_slug: null, updated_at: new Date() })
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .returningAll()
+      .executeTakeFirst();
+
+    if (!updated) return c.json({ error: 'Not found' }, 404);
     return c.body(null, 204);
   });
 
@@ -154,9 +281,9 @@ export function createConversationRoutes(db: Kysely<DB>) {
       .orderBy('created_at', 'asc')
       .execute();
 
-    let assistantContent: string;
+    let completion;
     try {
-      assistantContent = await completeChat(buildOpenRouterMessages(historyRows), modelId);
+      completion = await completeChat(buildOpenRouterMessages(historyRows), modelId);
     } catch (err) {
       if (isLlmError(err)) {
         return c.json({ error: err.message }, err.status);
@@ -170,7 +297,7 @@ export function createConversationRoutes(db: Kysely<DB>) {
       .values({
         conversation_id: id,
         role: 'assistant',
-        content: assistantContent,
+        content: completion.text,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -189,7 +316,16 @@ export function createConversationRoutes(db: Kysely<DB>) {
 
     await publishConversationEvent(id, event);
 
-    return c.json({ user: userMessage, assistant: assistantMessage }, 201);
+    return c.json(
+      {
+        user: userMessage,
+        assistant: assistantMessage,
+        modelUsed: completion.modelUsed,
+        requestedModel: completion.requestedModel,
+        usedFallback: completion.usedFallback,
+      },
+      201,
+    );
   });
 
   routes.post('/:id/messages/stream', async (c) => {

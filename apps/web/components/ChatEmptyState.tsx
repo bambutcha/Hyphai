@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'motion/react';
+import { HyphaeGraphEmpty } from '@/components/visual/HyphaeGraphEmpty';
 import { HyphaeIllustration } from '@/components/visual/HyphaeIllustration';
 import { GlowButton } from '@/components/visual/GlowButton';
 import { GlassPanel } from '@/components/visual/GlassPanel';
@@ -23,7 +24,11 @@ export function ChatEmptyState({ variant, onCreateChat }: ChatEmptyStateProps) {
 
   return (
     <div className="chat-main-area relative flex h-full min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-6 py-12">
-      <HyphaeIllustration className="mb-8" />
+      {isWelcome ? (
+        <HyphaeGraphEmpty className="mb-6" onNodeClick={onCreateChat} />
+      ) : (
+        <HyphaeIllustration className="mb-8" />
+      )}
 
       <motion.div
         variants={fadeUp}

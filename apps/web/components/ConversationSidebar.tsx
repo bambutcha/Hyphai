@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import type { Conversation } from '@/lib/api';
-import { LoadingState } from '@/components/ui/LoadingState';
+import { SidebarSkeleton } from '@/components/ui/SidebarSkeleton';
 import { GlowButton } from '@/components/visual/GlowButton';
 import { motionTransition, staggerContainer, staggerItem } from '@/lib/motion';
 import { uiText } from '@/lib/ui-text';
@@ -95,8 +95,8 @@ export function ConversationSidebar({
         className="flex-1 overflow-y-auto px-2 pb-4"
       >
         {loading ? (
-          <li>
-            <LoadingState label={uiText.sidebar.loadingChats} compact />
+          <li className="py-2">
+            <SidebarSkeleton rows={5} />
           </li>
         ) : loadError ? (
           <li className="px-3 py-6 text-center">

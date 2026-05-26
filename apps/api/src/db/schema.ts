@@ -14,6 +14,9 @@ export interface ConversationsTable {
   id: Generated<string>;
   user_id: string;
   title: string;
+  parent_id: string | null;
+  fork_from_message_id: string | null;
+  share_slug: string | null;
   created_at: ColumnType<Date, Date | string | undefined, never>;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }

@@ -5,8 +5,9 @@ import { useEffect, useRef } from 'react';
 import { MessageMarkdown } from '@/components/MessageMarkdown';
 import { ModelSelector } from '@/components/ModelSelector';
 import type { LlmModelOption, Message } from '@/lib/api';
+import { ModelBadge, type ModelMeta } from '@/components/ModelBadge';
 import { ConnectionBadge, type ConnectionStatus } from '@/components/ui/ConnectionBadge';
-import { LoadingState } from '@/components/ui/LoadingState';
+import { MessageListSkeleton } from '@/components/ui/MessageListSkeleton';
 import { GlowButton } from '@/components/visual/GlowButton';
 import { messageBubble, motionTransition } from '@/lib/motion';
 import { uiText } from '@/lib/ui-text';
@@ -27,6 +28,9 @@ interface MessagePaneProps {
   sending: boolean;
   streamingContent?: string | null;
   onOpenMenu?: () => void;
+  lastModelMeta?: ModelMeta | null;
+  onForkMessage?: (messageId: string) => void;
+  onShare?: () => void;
 }
 
 export function MessagePane({
@@ -45,6 +49,9 @@ export function MessagePane({
   sending,
   streamingContent = null,
   onOpenMenu,
+  lastModelMeta = null,
+  onForkMessage,
+  onShare,
 }: MessagePaneProps) {
   const reduced = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -93,12 +100,22 @@ export function MessagePane({
               onChange={onModelChange}
             />
           )}
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              className="hyphai-interactive hyphai-focus rounded-lg px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-800/80 hover:text-emerald-400"
+            >
+              {uiText.share.enable}
+            </button>
+          )}
           {connectionStatus && <ConnectionBadge status={connectionStatus} />}
+          <ModelBadge meta={lastModelMeta} models={llmModels} />
         </div>
       </header>
 
       <div className="scroll-fade-y flex-1 overflow-y-auto px-4 py-6 md:px-8">
-        {loading && <LoadingState label={uiText.messages.loadingMessages} />}
+        {loading && <MessageListSkeleton count={4} />}
         {!loading && loadError && (
           <div className="mx-auto max-w-3xl py-12 text-center">
             <p className="text-sm text-red-400">{loadError}</p>
@@ -129,12 +146,22 @@ export function MessagePane({
                   }`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    className={`group/bubble relative max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                       message.role === 'user'
                         ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-emerald-950 shadow-[0_4px_24px_rgba(52,211,153,0.25)]'
                         : 'glass-panel text-zinc-100 shadow-lg shadow-black/20'
                     }`}
                   >
+                    {onForkMessage && (
+                      <button
+                        type="button"
+                        onClick={() => onForkMessage(message.id)}
+                        className="hyphai-interactive hyphai-focus absolute -top-2 right-2 rounded-md bg-zinc-900/90 px-2 py-0.5 text-[10px] text-zinc-400 opacity-0 ring-1 ring-zinc-700 transition group-hover/bubble:opacity-100 hover:text-emerald-400"
+                        title={uiText.fork.action}
+                      >
+                        {uiText.fork.action}
+                      </button>
+                    )}
                     {message.role === 'assistant' ? (
                       <MessageMarkdown content={message.content} />
                     ) : (

@@ -16,6 +16,7 @@ import {
 import { createAuthRoutes } from './routes/auth.js';
 import { createConversationRoutes } from './routes/conversations.js';
 import { createLlmRoutes } from './routes/llm.js';
+import { createShareRoutes } from './routes/share.js';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
@@ -31,7 +32,7 @@ const corsOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
 
 app.use('*', cors({
   origin: corsOrigins,
-  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use('*', metricsMiddleware);
@@ -44,6 +45,7 @@ app.get('/metrics', (c) => c.text(renderMetrics(), 200, {
 app.route('/api/auth', createAuthRoutes(db));
 app.route('/api/conversations', createConversationRoutes(db));
 app.route('/api/llm', createLlmRoutes());
+app.route('/api/share', createShareRoutes(db));
 
 app.get(
   '/ws',

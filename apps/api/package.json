@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --env-file=../../.env run --watch src/index.ts",
     "start": "bun run src/index.ts",
-    "db:migrate": "bun run src/db/migrate.ts"
+    "db:migrate": "bun run src/db/migrate.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "hono": "^4.7.10",

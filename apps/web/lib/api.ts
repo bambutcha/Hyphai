@@ -14,8 +14,21 @@ export interface Conversation {
   id: string;
   user_id: string;
   title: string;
+  parent_id?: string | null;
+  fork_from_message_id?: string | null;
+  share_slug?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ShareLinkResponse {
+  shareSlug: string;
+  shareUrl: string;
+}
+
+export interface SharedConversationResponse {
+  conversation: { id: string; title: string };
+  messages: Message[];
 }
 
 export interface Message {
@@ -137,6 +150,24 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function publicRequest<T>(path: string): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch {
+    throw new ApiError(0, 'Cannot reach server. Check your connection.');
+  }
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw parseApiError(res.status, body || res.statusText);
+  }
+
+  return res.json() as Promise<T>;
+}
+
 export const api = {
   register: (email: string, password: string, displayName?: string) =>
     request<AuthResponse>('/api/auth/register', {
@@ -180,4 +211,21 @@ export const api = {
         body: JSON.stringify({ content, ...(model ? { model } : {}) }),
       },
     ),
+
+  forkConversation: (conversationId: string, messageId: string) =>
+    request<Conversation>(`/api/conversations/${conversationId}/fork`, {
+      method: 'POST',
+      body: JSON.stringify({ messageId }),
+    }),
+
+  enableShare: (conversationId: string) =>
+    request<ShareLinkResponse>(`/api/conversations/${conversationId}/share`, {
+      method: 'POST',
+    }),
+
+  disableShare: (conversationId: string) =>
+    request<void>(`/api/conversations/${conversationId}/share`, { method: 'DELETE' }),
+
+  getSharedConversation: (slug: string) =>
+    publicRequest<SharedConversationResponse>(`/api/share/${slug}`),
 };

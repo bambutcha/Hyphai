@@ -139,6 +139,26 @@ button:not(:disabled),
   animation: glow-pulse 2s ease-in-out infinite;
 }
 
+.hyphai-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(39 39 42 / 0.45) 0%,
+    rgb(63 63 70 / 0.65) 50%,
+    rgb(39 39 42 / 0.45) 100%
+  );
+  background-size: 200% 100%;
+  animation: hyphai-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes hyphai-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .message-markdown {
   overflow-wrap: anywhere;
 }
@@ -188,6 +208,11 @@ button:not(:disabled),
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hyphai-skeleton {
+    animation: none;
+    background: rgb(39 39 42 / 0.55);
+  }
+
   .animate-hyphae-float,
   .animate-glow-pulse {
     animation: none;

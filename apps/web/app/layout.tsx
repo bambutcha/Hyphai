@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Syne } from 'next/font/google';
+import { ToastProvider } from '@/components/ui/ToastProvider';
 import { uiText } from '@/lib/ui-text';
 import './globals.css';
 
@@ -36,7 +37,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} h-full antialiased`}
     >
       <body className="hyphai-grain min-h-full flex flex-col bg-[var(--hyphai-bg-deep)]">
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );
